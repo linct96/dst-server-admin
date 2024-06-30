@@ -1,0 +1,49 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "web dev",
+			"detail": "detail web dev",
+			"type": "npm",
+			"script": "dev:web",
+			"problemMatcher": []
+		},
+		{
+			"label": "tauri dev",
+			"detail": "detail tauri dev",
+			"type": "npm",
+			"script": "dev:tauri",
+			"problemMatcher": []
+		},
+		{
+			"label": "dev",
+			"dependsOn": [
+				"web dev",
+				"tauri dev"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "web build",
+			"detail": "detail web build",
+			"type": "npm",
+			"script": "build:web",
+			"problemMatcher": []
+		},
+		{
+			"label": "tauri build",
+			"detail": "detail tauri build",
+			"type": "npm",
+			"script": "build:tauri",
+			"problemMatcher": []
+		},
+		{
+			"label": "build",
+			"dependsOn": [
+				"web build",
+				"tauri build"
+			],
+			"problemMatcher": []
+		}
+	]
+}

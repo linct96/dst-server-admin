@@ -1,0 +1,12 @@
+{
+  "name": "dst-server-admin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev:web": "pnpm --filter=web dev",
+    "dev:tauri": "pnpm --filter=tauri dev",
+    "build:web": "pnpm --filter=web build",
+    "build:tauri": "pnpm --filter=tauri build"
+  }
+}

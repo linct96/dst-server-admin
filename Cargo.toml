@@ -1,0 +1,11 @@
+[workspace]
+
+members = [
+    "packages/tauri"
+]
+
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.
+opt-level = "z"
+lto = true
+codegen-units = 1
