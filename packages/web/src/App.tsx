@@ -37,6 +37,16 @@ function App() {
       </form>
 
       <p>{greetMsg}</p>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <button
+          type="submit"
+          onClick={() => {
+            invoke('test_function')
+          }}
+        >
+          test
+        </button>
+      </div>
     </div>
   )
 }

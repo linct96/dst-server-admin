@@ -157,3 +157,6 @@ dist-ssr
 *.sw?
 
 target
+
+steamCMD
+dst_dedicated_server
