@@ -6,7 +6,7 @@
     "distDir": "../web/dist"
   },
   "package": {
-    "productName": "hifdrop",
+    "productName": "dst-server-admin",
     "version": "0.0.0"
   },
   "tauri": {
@@ -19,7 +19,7 @@
     },
     "windows": [
       {
-        "title": "hifdrop",
+        "title": "dst-server-admin",
         "width": 800,
         "height": 600
       }
@@ -30,7 +30,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.hifdrop.dev",
+      "identifier": "com.dst-server-admin.dev",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
