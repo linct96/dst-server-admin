@@ -43,6 +43,7 @@ function App() {
           onClick={() => {
             invoke('test_function').then(res => {
               console.log('test_function', res)
+              setGreetMsg('test_function')
             })
           }}
         >

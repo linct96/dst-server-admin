@@ -5,9 +5,11 @@ use std::io::{self, copy, BufRead, Cursor, Read, Write};
 use std::process::{Command, Stdio};
 use std::{fs, path};
 
+use tauri::api::path::home_dir;
 use tauri::api::shell;
 
-const STEAMCMD_DIR: &str = "./steamcmd";
+const ROOT_DIR: &str = "~/";
+const STEAM_CMD_DIR: &str = "steam_cmd";
 const DOWNLOAD_URL_WINDOWS: &str = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
 const DOWNLOAD_URL_LINUX: &str =
     "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz";
@@ -67,51 +69,35 @@ fn get_platform() {
     }
 }
 
-#[tauri::command]
-fn ensure_steam_CMD_is_installed() {
-    // if cfg!(target_os = "windows") {
-    //     let mut cmd = Command::new("powershell.exe");
-    //     cmd.arg("-Command")
-    //         .arg("Start-Process")
-    //         .arg("-FilePath")
-    //         .arg("https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip")
-    //         .arg("-Wait")
-    //         .arg("-Verb")
-    //         .arg("runAs");
-    //     let output = cmd.output().expect("failed to execute process");
-    //     println!("{:?}", output);
-    // } else {
-    //     // install steamcmd on linux
-    //     let mut cmd = Command::new("sh");
-    //     cmd.arg("-c")
-    //         .arg("curl -sqL ' https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz ' | tar zxvf -");
-    //     let output = cmd.output().expect("failed to execute process");
-    //     println!("{:?}", output);
-    //     // println!("SteamCMD is only available for Windows");
-    // }
-    let dir_path: &path::Path = path::Path::new("../../steamCMD");
-    if dir_path.exists() && dir_path.is_dir() {
+async fn download_steam_cmd_macos()-> Result<(), ()> {
+    let steam_cmd_dir_path_buf = home_dir().expect("Failed to get home directory").join(STEAM_CMD_DIR);
+    let steam_cmd_dir_path = path::Path::new(&steam_cmd_dir_path_buf);
+    println!("SteamCMD folder: {}", steam_cmd_dir_path.display());
+    if steam_cmd_dir_path.exists() && steam_cmd_dir_path.is_dir() {
         println!("SteamCMD is already installed");
     } else {
         println!("Installing SteamCMD...");
-        fs::create_dir_all(dir_path).expect("无法创建文件夹");
+        fs::create_dir_all(steam_cmd_dir_path).expect("无法创建文件夹");
         println!("SteamCMD folder created");
         let mut cmd = Command::new("sh");
         let shell_command = format!(
             "curl -sqL {} | tar zxf - -C {}",
             DOWNLOAD_URL_MACOS,
-            dir_path.display()
+            steam_cmd_dir_path.display()
         );
         cmd.arg("-c").arg(shell_command);
         let output = cmd.output().expect("failed to execute process");
+        
+        println!("Output: {}", String::from_utf8_lossy(&output.stdout));
         if output.status.success() {
             println!("SteamCMD installed successfully");
-            let shell_command = format!("chmod +x {}/steamcmd.sh", dir_path.display());
+            let shell_command = format!("chmod +x {}/steamcmd.sh", steam_cmd_dir_path.display());
             cmd.arg("-c").arg(shell_command);
         } else {
             println!("Failed to install SteamCMD");
         }
     }
+    Ok(())
 }
 
 fn ensure_dst_server_is_installed() {
@@ -163,18 +149,14 @@ async fn test_function() {
     // get_platform();
     // ensure_steam_CMD_is_installed();
     // ensure_dst_server_is_installed();
-    download_steam_cmd_windows().await.unwrap();
     // download_steam_cmd_windows().await.unwrap();
+    download_steam_cmd_macos().await.unwrap();
 }
 fn main() {
     #[allow(unused_mut)]
     let builder = tauri::Builder::default();
     builder
-        .invoke_handler(tauri::generate_handler![
-            test_function,
-            greet,
-            ensure_steam_CMD_is_installed
-        ])
+        .invoke_handler(tauri::generate_handler![test_function, greet,])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
