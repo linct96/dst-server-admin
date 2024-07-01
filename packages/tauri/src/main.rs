@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::fs::File;
-use std::io::{self, copy, BufRead, Cursor};
+use std::io::{self, copy, BufRead, Cursor, Write};
 use std::process::{Command, Stdio};
 use std::{fs, path};
 
@@ -17,34 +17,17 @@ const DOWNLOAD_URL_MACOS: &str =
 
 #[tokio::main]
 async fn download_steam_cmd_windows() -> Result<(), String> {
-    let tmp_dir = tempfile::Builder::new()
-        .prefix("example")
-        .tempdir()
-        .or(Err("Failed to create temp dir"))?;
 
     let res = reqwest::get(DOWNLOAD_URL_WINDOWS)
         .await
         .or(Err("Failed to download steamcmd"))?;
     
-    // let mut dest = {
-    //     let fname = res
-    //         .url()
-    //         .path_segments()
-    //         .and_then(|segments| segments.last())
-    //         .and_then(|name| if name.is_empty() { None } else { Some(name) })
-    //         .unwrap_or("tmp.bin");
-
-    //     println!("file to download: '{}'", fname);
-    //     let fname = tmp_dir.path().join(fname);
-    //     println!("will be located under: '{:?}'", fname);
-    //     File::create(fname)?;
-    // };
     let content = res
-        .text()
+        .bytes()
         .await
         .or(Err("Failed to read steamcmd content"))?;
-    let mut file = std::fs::File::create("steamcmd.zip").or(Err("Failed to create steamcmd file"))?;
-    copy(&mut content.as_bytes(), &mut file).or(Err("Failed to write steamcmd file"))?;
+    let mut file = std::fs::File::create("s.zip").or(Err("Failed to create steamcmd file"))?;
+    file.write_all(&content).or(Err("Failed to write steamcmd file"))?;
 
     Ok(())
 }
@@ -170,8 +153,8 @@ fn ensure_dst_server_is_installed() {
     }
 }
 
-#[tauri::command]
-fn test_function() {
+#[tauri::command(async)]
+async fn test_function() {
     // get_platform();
     // ensure_steam_CMD_is_installed();
     // ensure_dst_server_is_installed();
@@ -190,23 +173,3 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-// #[tauri::command]
-// async fn server() {
-//     // initialize tracing
-//     tracing_subscriber::fmt::init();
-
-//     // build our application with a route
-//     // let app = axum::Router::new();
-//     // app.route("/", axum::routing::get(root));
-
-//     // let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-//     // let app = Router::new()
-//     //     // `GET /` goes to `root`
-//     //     .route("/", get(root))
-//     //     // `POST /users` goes to `create_user`
-//     //     .route("/users", post(create_user));
-
-//     // // run our app with hyper, listening globally on port 3000
-//     // let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-//     // axum::serve(listener, app).await.unwrap();
-// }
