@@ -15,7 +15,6 @@ const DOWNLOAD_URL_LINUX: &str =
 const DOWNLOAD_URL_MACOS: &str =
     "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz";
 
-#[tokio::main]
 async fn download_steam_cmd_windows() -> Result<(), String> {
 
     let res = reqwest::get(DOWNLOAD_URL_WINDOWS)
@@ -28,6 +27,15 @@ async fn download_steam_cmd_windows() -> Result<(), String> {
         .or(Err("Failed to read steamcmd content"))?;
     let mut file = std::fs::File::create("s.zip").or(Err("Failed to create steamcmd file"))?;
     file.write_all(&content).or(Err("Failed to write steamcmd file"))?;
+
+    Ok(())
+}
+
+async fn d_steam_cmd_windows()-> Result<(), ()> {
+    let res = reqwest::get(DOWNLOAD_URL_WINDOWS).await.expect("Failed to download steamcmd");
+    let content = res.bytes().await.expect("Failed to read steamcmd content");
+    let mut file = std::fs::File::create("s.zip").expect("Failed to create steamcmd file");
+    file.write_all(&content).expect("Failed to write steamcmd file");
 
     Ok(())
 }
@@ -153,12 +161,13 @@ fn ensure_dst_server_is_installed() {
     }
 }
 
-#[tauri::command(async)]
+#[tauri::command]
 async fn test_function() {
     // get_platform();
     // ensure_steam_CMD_is_installed();
     // ensure_dst_server_is_installed();
-    download_steam_cmd_windows();
+    d_steam_cmd_windows().await.unwrap();
+    // download_steam_cmd_windows().await.unwrap();
 }
 fn main() {
     #[allow(unused_mut)]
