@@ -1,8 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::fs::File;
-use std::io::{self, copy, BufRead, Cursor, Write};
+use std::io::{self, copy, BufRead, Cursor, Read, Write};
 use std::process::{Command, Stdio};
 use std::{fs, path};
 
@@ -15,28 +14,26 @@ const DOWNLOAD_URL_LINUX: &str =
 const DOWNLOAD_URL_MACOS: &str =
     "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz";
 
-async fn download_steam_cmd_windows() -> Result<(), String> {
-
+async fn download_steam_cmd_windows() -> Result<(), ()> {
     let res = reqwest::get(DOWNLOAD_URL_WINDOWS)
         .await
-        .or(Err("Failed to download steamcmd"))?;
-    
-    let content = res
-        .bytes()
-        .await
-        .or(Err("Failed to read steamcmd content"))?;
-    let mut file = std::fs::File::create("s.zip").or(Err("Failed to create steamcmd file"))?;
-    file.write_all(&content).or(Err("Failed to write steamcmd file"))?;
+        .expect("Failed to download steam_cmd");
+    let content = res.bytes().await.expect("Failed to read steam_cmd content");
+    let mut zip_file = fs::File::create("temp.zip").expect("Failed to create steam_cmd file");
+    zip_file
+        .write_all(&content)
+        .expect("Failed to write steam_cmd file");
 
-    Ok(())
-}
-
-async fn d_steam_cmd_windows()-> Result<(), ()> {
-    let res = reqwest::get(DOWNLOAD_URL_WINDOWS).await.expect("Failed to download steamcmd");
-    let content = res.bytes().await.expect("Failed to read steamcmd content");
-    let mut file = std::fs::File::create("s.zip").expect("Failed to create steamcmd file");
-    file.write_all(&content).expect("Failed to write steamcmd file");
-
+    let inner_file = fs::File::open("temp.zip").expect("Failed to open steam_cmd file");
+    let mut archive = zip::ZipArchive::new(inner_file).expect("Failed to open steam_cmd archive");
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i).expect("Failed to get steam_cmd file");
+        println!("File name: {}", file.name());
+        let mut output_file =
+            fs::File::create(file.name()).expect("Failed to create steam_cmd file");
+        io::copy(&mut file, &mut output_file).expect("Failed to copy steam_cmd file");
+    }
+    fs::remove_file("temp.zip").expect("Failed to remove steam_cmd file");
     Ok(())
 }
 
@@ -166,7 +163,7 @@ async fn test_function() {
     // get_platform();
     // ensure_steam_CMD_is_installed();
     // ensure_dst_server_is_installed();
-    d_steam_cmd_windows().await.unwrap();
+    download_steam_cmd_windows().await.unwrap();
     // download_steam_cmd_windows().await.unwrap();
 }
 fn main() {
@@ -181,4 +178,3 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-

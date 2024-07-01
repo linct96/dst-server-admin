@@ -41,7 +41,9 @@ function App() {
         <button
           type="submit"
           onClick={() => {
-            invoke('test_function')
+            invoke('test_function').then(res => {
+              console.log('test_function', res)
+            })
           }}
         >
           test
