@@ -1,16 +1,53 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::io::BufRead;
+use std::fs::File;
+use std::io::{self, copy, BufRead, Cursor};
 use std::process::{Command, Stdio};
 use std::{fs, path};
 
 use tauri::api::shell;
 
 const STEAMCMD_DIR: &str = "./steamcmd";
-const DOWNLOAD_URL_LINUX: &str = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
+const DOWNLOAD_URL_WINDOWS: &str = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
+const DOWNLOAD_URL_LINUX: &str =
+    "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz";
 const DOWNLOAD_URL_MACOS: &str =
     "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz";
+
+#[tokio::main]
+async fn download_steam_cmd_windows() -> Result<(), String> {
+    let tmp_dir = tempfile::Builder::new()
+        .prefix("example")
+        .tempdir()
+        .or(Err("Failed to create temp dir"))?;
+
+    let res = reqwest::get(DOWNLOAD_URL_WINDOWS)
+        .await
+        .or(Err("Failed to download steamcmd"))?;
+    
+    // let mut dest = {
+    //     let fname = res
+    //         .url()
+    //         .path_segments()
+    //         .and_then(|segments| segments.last())
+    //         .and_then(|name| if name.is_empty() { None } else { Some(name) })
+    //         .unwrap_or("tmp.bin");
+
+    //     println!("file to download: '{}'", fname);
+    //     let fname = tmp_dir.path().join(fname);
+    //     println!("will be located under: '{:?}'", fname);
+    //     File::create(fname)?;
+    // };
+    let content = res
+        .text()
+        .await
+        .or(Err("Failed to read steamcmd content"))?;
+    let mut file = std::fs::File::create("steamcmd.zip").or(Err("Failed to create steamcmd file"))?;
+    copy(&mut content.as_bytes(), &mut file).or(Err("Failed to write steamcmd file"))?;
+
+    Ok(())
+}
 
 fn check_steam_CMD_folder() {
     let dir_path = path::Path::new("./steamcmd");
@@ -135,9 +172,10 @@ fn ensure_dst_server_is_installed() {
 
 #[tauri::command]
 fn test_function() {
-    get_platform();
-    ensure_steam_CMD_is_installed();
-    ensure_dst_server_is_installed();
+    // get_platform();
+    // ensure_steam_CMD_is_installed();
+    // ensure_dst_server_is_installed();
+    download_steam_cmd_windows();
 }
 fn main() {
     #[allow(unused_mut)]
