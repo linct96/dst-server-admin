@@ -4,9 +4,12 @@
 use std::io::{self, copy, BufRead, Cursor, Read, Write};
 use std::process::{Command, Stdio};
 use std::{fs, path};
+use std::error::Error;
 
+use axum::routing::{get, post};
 use tauri::api::path::home_dir;
 use tauri::api::shell;
+use tauri::Manager;
 
 const ROOT_DIR: &str = "~/";
 const STEAM_CMD_DIR: &str = "steam_cmd";
@@ -69,8 +72,10 @@ fn get_platform() {
     }
 }
 
-async fn download_steam_cmd_macos()-> Result<(), ()> {
-    let steam_cmd_dir_path_buf = home_dir().expect("Failed to get home directory").join(STEAM_CMD_DIR);
+async fn download_steam_cmd_macos() -> Result<(), ()> {
+    let steam_cmd_dir_path_buf = home_dir()
+        .expect("Failed to get home directory")
+        .join(STEAM_CMD_DIR);
     let steam_cmd_dir_path = path::Path::new(&steam_cmd_dir_path_buf);
     println!("SteamCMD folder: {}", steam_cmd_dir_path.display());
     if steam_cmd_dir_path.exists() && steam_cmd_dir_path.is_dir() {
@@ -87,7 +92,7 @@ async fn download_steam_cmd_macos()-> Result<(), ()> {
         );
         cmd.arg("-c").arg(shell_command);
         let output = cmd.output().expect("failed to execute process");
-        
+
         println!("Output: {}", String::from_utf8_lossy(&output.stdout));
         if output.status.success() {
             println!("SteamCMD installed successfully");
@@ -152,10 +157,54 @@ async fn test_function() {
     // download_steam_cmd_windows().await.unwrap();
     download_steam_cmd_macos().await.unwrap();
 }
+
+async fn root() -> &'static str {
+    "Hello, World!"
+}
+
+async fn start_server() -> Result<(), Box<dyn std::error::Error>> {
+    let app: axum::Router = axum::Router::new()
+        // `GET /` goes to `root`
+        .route("/", get(root));
+        // `POST /users` goes to `create_user`
+        // .route("/users", post(create_user));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+    Ok(())
+}
+
+async fn verify_local_server() -> Result<(), Box<dyn Error>> {
+    Ok(())
+}
+
+
+fn setup_server<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn Error>> {
+    // download_steam_cmd_macos().await.unwrap();
+    tauri::async_runtime::spawn(async move {
+        start_server().await.expect("Failed to start server");
+    });
+    let handle = app.handle();
+    tauri::async_runtime::spawn(async move {
+        // also added move here
+        let verify_result = verify_local_server().await;
+        match verify_result {
+            Ok(_) => {
+                println!("Local Server is running");
+            }
+            Err(err) => {
+                handle.emit_all("local-server-down", ()).unwrap(); // changed this to handle.
+                println!("Local Server is not running");
+                println!("{}", err);
+            }
+        }
+    });
+    Ok(())
+}
 fn main() {
     #[allow(unused_mut)]
     let builder = tauri::Builder::default();
     builder
+        .setup(setup_server)
         .invoke_handler(tauri::generate_handler![test_function, greet,])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
