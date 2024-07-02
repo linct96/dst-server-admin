@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "dev": "pnpm --filter=server dev",
     "dev:web": "pnpm --filter=web dev",
     "dev:tauri": "pnpm --filter=tauri dev",
     "build:web": "pnpm --filter=web build",
