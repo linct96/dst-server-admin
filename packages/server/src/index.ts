@@ -2,14 +2,116 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import axios from 'axios'
 import { createWriteStream } from 'fs'
-import { $, execa } from 'execa'
+import { $, execa, execaCommand } from 'execa'
 import { WORKING_PROCESS_KEY, WORKING_PROCESS_MAP } from './const'
 import terminate from 'terminate/promise'
+import { sign } from 'crypto'
+import process from 'node:process'
+import { streamText } from 'hono/streaming'
 
+const controller = new AbortController()
 const app = new Hono()
 
+const startServer = async () => {
+  const childProcess = $({
+    shell: true
+  })`ping cip.cc`
+
+  const pid = childProcess.pid
+  if (pid) {
+    WORKING_PROCESS_MAP.set(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD, childProcess)
+    try {
+      for await (const line of childProcess) {
+        console.warn(line)
+      }
+    } catch (error) {
+      // console.log('eeeee', error)
+    }
+  }
+  WORKING_PROCESS_MAP.delete(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)
+
+  return true
+}
+
+app.get('/stop', async c => {
+  const childProcess = WORKING_PROCESS_MAP.get(
+    WORKING_PROCESS_KEY.INSTALL_STEAM_CMD
+  )
+  if (childProcess && childProcess.pid) {
+    try {
+      await terminate(childProcess.pid)
+      WORKING_PROCESS_MAP.delete(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)
+      return c.text('Process terminated successfully')
+    } catch (error) {
+      console.error('eeee', error)
+    }
+  } else {
+    return c.text('No process is running')
+  }
+})
+app.get('/start', async c => {
+  // const writer = createWriteStream('./a.tar.gz');
+  if (WORKING_PROCESS_MAP.get(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)) {
+    return c.text('Progress is already in progress')
+  } else {
+    return streamText(c, async stream => {
+      // Write a text with a new line ('\n').
+      const childProcess = $({
+        shell: true
+      })`ping cip.cc`
+      const pid = childProcess.pid
+      if (pid) {
+        WORKING_PROCESS_MAP.set(
+          WORKING_PROCESS_KEY.INSTALL_STEAM_CMD,
+          childProcess
+        )
+        try {
+          for await (const line of childProcess) {
+            console.warn(line)
+            await stream.writeln(line)
+          }
+        } catch (error) {
+          // console.log('eeeee', error)
+        }
+      }
+      WORKING_PROCESS_MAP.delete(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)
+      // await stream.writeln('Hello')
+      // // Wait 1 second.
+      // await stream.sleep(1000)
+      // // Write a text without a new line.
+      // await stream.write(`Hono!`)
+    })
+    // startServer()
+    const childProcess = $({
+      shell: true
+    })`ping cip.cc`
+
+    const pid = childProcess.pid
+    if (pid) {
+      WORKING_PROCESS_MAP.set(
+        WORKING_PROCESS_KEY.INSTALL_STEAM_CMD,
+        childProcess
+      )
+      try {
+        for await (const line of childProcess) {
+          console.warn(line)
+        }
+      } catch (error) {
+        // console.log('eeeee', error)
+      }
+    }
+    WORKING_PROCESS_MAP.delete(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)
+  }
+
+  return c.text('Hello Hono!')
+})
 app.get('/', async c => {
   // const writer = createWriteStream('./a.tar.gz');
+  // if (WORKING_PROCESS_MAP.get(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)) {
+  //   return c.text('Progress is already in progress')
+  // } else {
+  //   startServer()
+  // }
 
   // axios.get("https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz",{
   //   responseType:"stream"
@@ -19,22 +121,6 @@ app.get('/', async c => {
   // for await (const line of $({ shell: true })`echo $\{HOME\}`) {
   //   console.warn(line)
   // }
-  if (WORKING_PROCESS_MAP.get(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)) {
-    return c.text('Progress is already in progress')
-  }
-  const process = $({ shell: true })`ping cip.cc`
-  if (process.pid) {
-    WORKING_PROCESS_MAP.set(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD, process)
-  }
-  try {
-    ;(async () => {
-      for await (const line of process) {
-        console.warn(line)
-      }
-    })()
-  } catch (error) {
-    console.error('eeeeeee', error)
-  }
 
   // try {
   //   if (progress) {
@@ -55,30 +141,37 @@ app.get('/', async c => {
   // execa('ping cip.cc', { shell: true }).then(result => {
   //   console.log(result.stdout)
   // })
-
+  return streamText(c, async stream => {
+    // Write a text with a new line ('\n').
+    await stream.writeln('Hello')
+    // Wait 1 second.
+    await stream.sleep(1000)
+    // Write a text without a new line.
+    await stream.write(`Hono!`)
+  })
   // await $`curl -qL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz`
-
+  return c.html(`<!doctype html>
+  <html>
+    <head>
+      <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+      <link href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" rel="stylesheet">
+    </head>
+    <body>
+      <div id="terminal"></div>
+      <script>
+        var term = new Terminal();
+        term.open(document.getElementById('terminal'));
+        term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m')
+        term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m')
+      </script>
+    </body>
+  </html>`)
   return c.text('Hello Hono!')
-})
-app.get('/stop', async c => {
-  const process = WORKING_PROCESS_MAP.get(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)
-  if (process && process.pid) {
-    console.log('Terminating process')
-    await terminate(process.pid).catch(err => {
-      console.error('eeeeee', err)
-      return c.text('error terminating process' + err)
-    })
-    WORKING_PROCESS_MAP.delete(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)
-    return c.text('Process terminated successfully')
-  } else {
-    return c.text('No process is running')
-  }
 })
 
 const port = 3000
-console.log(`Server is running on port ${port}`)
-
 serve({
   fetch: app.fetch,
   port
 })
+console.log(`Server is running on port ${port}`)
