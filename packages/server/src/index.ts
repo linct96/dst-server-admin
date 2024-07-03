@@ -7,7 +7,7 @@ import { WORKING_PROCESS_KEY, WORKING_PROCESS_MAP } from './const'
 import terminate from 'terminate/promise'
 import { sign } from 'crypto'
 import process from 'node:process'
-import { streamText } from 'hono/streaming'
+import { streamText, streamSSE, stream } from 'hono/streaming'
 
 const controller = new AbortController()
 const app = new Hono()
@@ -54,7 +54,8 @@ app.get('/start', async c => {
   if (WORKING_PROCESS_MAP.get(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD)) {
     return c.text('Progress is already in progress')
   } else {
-    return streamText(c, async stream => {
+    c.header('Content-Type', 'text/event-stream')
+    return stream(c, async stream => {
       // Write a text with a new line ('\n').
       const childProcess = $({
         shell: true
@@ -69,6 +70,7 @@ app.get('/start', async c => {
           for await (const line of childProcess) {
             console.warn(line)
             await stream.writeln(line)
+            // await stream.writeln(line)
           }
         } catch (error) {
           // console.log('eeeee', error)
@@ -141,32 +143,57 @@ app.get('/', async c => {
   // execa('ping cip.cc', { shell: true }).then(result => {
   //   console.log(result.stdout)
   // })
-  return streamText(c, async stream => {
-    // Write a text with a new line ('\n').
-    await stream.writeln('Hello')
-    // Wait 1 second.
-    await stream.sleep(1000)
-    // Write a text without a new line.
-    await stream.write(`Hono!`)
-  })
   // await $`curl -qL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz`
   return c.html(`<!doctype html>
   <html>
     <head>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.2/axios.min.js" integrity="sha512-JSCFHhKDilTRRXe9ak/FJ28dcpOJxzQaCd3Xg8MyF6XFjODhy/YMCM8HW0TFDckNHWUewW+kfvhin43hKtJxAw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
       <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
       <link href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" rel="stylesheet">
     </head>
     <body>
       <div id="terminal"></div>
       <script>
-        var term = new Terminal();
-        term.open(document.getElementById('terminal'));
-        term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m')
-        term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m')
+        // var term = new Terminal();
+        // term.open(document.getElementById('terminal'));
+        // term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m')
+        // term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m')
+        (async ()=>{
+          const response = await fetch('http://101.126.78.130:3000/start')
+          console.log(response)
+          console.log(response.body)
+          const reader = response.body.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              console.log("Stream complete");
+              break;
+            }
+
+            console.log(new TextDecoder().decode(value));
+          }   
+        })();
+        
+        
+
+      
+        // axios.get('http://101.126.78.130:3000/start', {
+        //   headers: {
+        //     'accept': '*',
+        //     'content-type': 'application/json'
+        //   },
+        //   onDownloadProgress: progressEvent => {
+        //     const xhr = progressEvent.event.target
+        //     const { responseText } = xhr
+        //     console.log("=====responseText======")
+        //     console.log(responseText)
+        //   }
+        // })
+        
       </script>
     </body>
   </html>`)
-  return c.text('Hello Hono!')
 })
 
 const port = 3000
