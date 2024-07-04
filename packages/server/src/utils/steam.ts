@@ -22,9 +22,11 @@ export const installSteamCMD = async (forceInstall = false) => {
     const childProcess = $({
       shell: true,
       verbose: 'full'
-    })`curl -sqL ${STEAM_DOWNLOAD_URL_LINUX} | tar zxf - -C ${STEAM_CMD_PATH}`
+    })`curl -sqkL ${STEAM_DOWNLOAD_URL_LINUX}`
+      .pipe`tar zxf - -C ${STEAM_CMD_PATH}`
     // childProcess.stdout.pipe(process.stdout)
     await childProcess
+    console.log('SteamCMD installed.')
   } else {
     console.log('SteamCMD is already installed.')
   }

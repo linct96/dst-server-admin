@@ -11,4 +11,4 @@ export const DST_SERVER_PATH = `${HOME_PATH}/DST_SERVER`
 export const DST_SAVE_PATH = `${HOME_PATH}/DST_SERVER_SAVE`
 export const APP_PORT = 9527
 export const STEAM_DOWNLOAD_URL_LINUX =
-  'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz'
+  'https://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz'
