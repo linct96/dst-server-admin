@@ -1,0 +1,7 @@
+{
+  "extends": "@marthemis/eslint-config",
+  "rules": {
+    "no-undef": "off",
+    "react/react-in-jsx-scope": "off"
+  }
+}

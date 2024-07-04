@@ -3,8 +3,12 @@ import { installSteamCMD, isSteamInstalled } from './utils/steam'
 import { WORKING_PROCESS_KEY, WORKING_PROCESS_MAP } from './const'
 import { run } from 'node:test'
 import { $ } from 'execa'
+import { stream } from 'hono/streaming'
+import { cors } from 'hono/cors'
 
 const app = new Hono()
+app.use('/api/*', cors())
+
 app.get('/', async c => {
   return c.text('hello world')
 })
@@ -23,7 +27,9 @@ app.get('/api/installSteamCMD', async c => {
   }
   // WORKING_PROCESS_MAP.set(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD, true)
   await installSteamCMD(true)
-  return c.json({ success: true })
+  return stream(c, async stream => {
+    // stream.pipe(process.stdout)
+  })
 })
 
 export default app
