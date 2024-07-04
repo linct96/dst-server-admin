@@ -27,9 +27,7 @@ app.get('/api/installSteamCMD', async c => {
   }
   // WORKING_PROCESS_MAP.set(WORKING_PROCESS_KEY.INSTALL_STEAM_CMD, true)
   await installSteamCMD(true)
-  return stream(c, async stream => {
-    // stream.pipe(process.stdout)
-  })
+  return c.json({ running: false })
 })
 
 export default app
