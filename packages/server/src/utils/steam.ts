@@ -20,7 +20,8 @@ export const installSteamCMD = async (forceInstall = false) => {
     mkdirSync(STEAM_CMD_PATH, { recursive: true })
     console.log('Installing SteamCMD...')
     const childProcess = $({
-      shell: true
+      shell: true,
+      verbose: 'full'
     })`curl -sqL ${STEAM_DOWNLOAD_URL_LINUX} | tar zxf - -C ${STEAM_CMD_PATH}`
     // childProcess.stdout.pipe(process.stdout)
     await childProcess
