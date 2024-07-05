@@ -31,7 +31,6 @@ export const installSteamCMD = async (forceInstall = false) => {
   }
   if (!isSteamInstalled()) {
     mkdirSync(STEAM_CMD_PATH, { recursive: true })
-    console.log('Installing SteamCMD...')
     const childProcess = $({
       shell: true,
       verbose: 'full'
@@ -39,9 +38,6 @@ export const installSteamCMD = async (forceInstall = false) => {
       .pipe`tar zxf - -C ${STEAM_CMD_PATH}`
     // childProcess.stdout.pipe(process.stdout)
     await childProcess
-    console.log('SteamCMD installed.')
-  } else {
-    console.log('SteamCMD is already installed.')
   }
 }
 

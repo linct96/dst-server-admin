@@ -3,21 +3,24 @@ import { Hono } from 'hono'
 import { createServer } from 'node:http2'
 import os from 'node:os'
 import axios from 'axios'
-import { createWriteStream } from 'fs'
+import { accessSync, constants, createWriteStream } from 'fs'
 import { $, execa, execaCommand } from 'execa'
-import { APP_PORT, WORKING_PROCESS_KEY, WORKING_PROCESS_MAP } from './const'
+import {
+  APP_PORT,
+  STEAM_CMD_PATH,
+  WORKING_PROCESS_KEY,
+  WORKING_PROCESS_MAP
+} from './const'
 import terminate from 'terminate/promise'
 import { sign } from 'crypto'
 import process from 'node:process'
 import { streamText, streamSSE, stream } from 'hono/streaming'
 import app from './app'
-// const app = new Hono()
-// app.get('/', async c => {
-//   return c.text('hello world')
-// })
-// app.notFound(async c => {
-//   return c.text('Not found', 404)
-// })
+import preStart from './preStart'
+import { GlobalVar } from './global'
+
+await preStart()
+console.log(GlobalVar)
 console.log('platform:', os.platform())
 serve({
   fetch: app.fetch,
