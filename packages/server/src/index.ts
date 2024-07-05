@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { createServer } from 'node:http2'
-
+import os from 'node:os'
 import axios from 'axios'
 import { createWriteStream } from 'fs'
 import { $, execa, execaCommand } from 'execa'
@@ -18,6 +18,7 @@ import app from './app'
 // app.notFound(async c => {
 //   return c.text('Not found', 404)
 // })
+console.log('platform:', os.platform())
 serve({
   fetch: app.fetch,
   port: APP_PORT

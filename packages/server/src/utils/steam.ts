@@ -1,7 +1,12 @@
 import { accessSync, mkdirSync, constants } from 'node:fs'
-import { STEAM_CMD_PATH, STEAM_DOWNLOAD_URL_LINUX } from '../const'
+import {
+  DST_SERVER_PATH,
+  DST_UGC_MOD_PATH,
+  STEAM_CMD_PATH,
+  STEAM_DOWNLOAD_URL_LINUX
+} from '../const'
 import { $ } from 'execa'
-import { rimraf, rimrafSync, native, nativeSync } from 'rimraf'
+import { rimrafSync } from 'rimraf'
 
 export const isSteamInstalled = () => {
   try {
@@ -10,6 +15,14 @@ export const isSteamInstalled = () => {
   } catch (e) {
     return false
   }
+}
+
+export const installENV = async () => {
+  console.log('Installing environment...')
+  const scriptPath = `./scripts/install-env.sh`
+  await $`chmod +x ${scriptPath}`
+  await $`${scriptPath}`
+  console.log('Environment installed.')
 }
 
 export const installSteamCMD = async (forceInstall = false) => {
@@ -30,4 +43,19 @@ export const installSteamCMD = async (forceInstall = false) => {
   } else {
     console.log('SteamCMD is already installed.')
   }
+}
+
+export const installGameServer = async (forceInstall = false) => {
+  if (forceInstall) {
+    rimrafSync(DST_SERVER_PATH)
+  }
+  mkdirSync(DST_SERVER_PATH, { recursive: true })
+  mkdirSync(DST_UGC_MOD_PATH, { recursive: true })
+  console.log('Installing DST server...')
+  const childProcess = $({
+    shell: true,
+    verbose: 'full'
+  })`chmod +x ${STEAM_CMD_PATH}/steamcmd.sh && ${STEAM_CMD_PATH}/steamcmd.sh +login anonymous +force_install_dir ${DST_SERVER_PATH} +app_update 343050 validate +quit`
+  await childProcess
+  console.log('DST server installed.')
 }
