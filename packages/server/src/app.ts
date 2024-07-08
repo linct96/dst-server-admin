@@ -12,6 +12,7 @@ import { mkdirSync, writeFileSync } from 'fs'
 import { stringify } from 'ini'
 import { DST_SAVE_PATH } from './const'
 import { createCluster } from './utils/create'
+import server from './server'
 const sleep = (time: number) => {
   return new Promise(resolve => {
     setTimeout(resolve, time)
@@ -93,5 +94,7 @@ app.get('/api/installSystemLibraries', async c => {
   await installENV()
   return c.json({ running: false })
 })
+
+app.route('/api', server)
 
 export default app
