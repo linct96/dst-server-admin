@@ -20,7 +20,6 @@ import preStart from './preStart'
 import { GlobalVar } from './global'
 
 await preStart()
-console.log(GlobalVar)
 console.log('platform:', os.platform())
 serve({
   fetch: app.fetch,

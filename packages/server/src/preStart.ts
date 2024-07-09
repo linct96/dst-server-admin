@@ -11,7 +11,6 @@ import { DST_SAVE_PATH, DST_SERVER_PATH, STEAM_CMD_PATH } from './const'
 import { GlobalVar } from './global'
 
 export default async function preStart() {
-  console.log('Pre-start script running')
   try {
     accessSync(STEAM_CMD_PATH, constants.F_OK)
     GlobalVar.isSteamCMDInstalled = true

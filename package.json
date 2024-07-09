@@ -10,5 +10,8 @@
     "dev:tauri": "pnpm --filter=tauri dev",
     "build:web": "pnpm --filter=web build",
     "build:tauri": "pnpm --filter=tauri build"
+  },
+  "resolutions": {
+    "@types/react": "18"
   }
 }

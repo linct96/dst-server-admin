@@ -13,9 +13,13 @@ app.get('/initOS', async c => {
     username: 'root',
     privateKeyPath: '/Users/linchaoting/.ssh/byte_id_rsa'
   })
+
   const res = await ssh.execCommand(
     'curl -sL https://deb.nodesource.com/setup_22.x | sudo -E bash -'
   )
+  console.log('connect', ssh.isConnected())
+  ssh.dispose()
+  console.log('connect', ssh.isConnected())
   return c.json({ message: res.stdout })
 })
 
