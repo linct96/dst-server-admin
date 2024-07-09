@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { stream } from 'hono/streaming'
 import { getSSH } from './ssh'
+import { stdout } from 'process'
 
 const app = new Hono()
 
@@ -44,22 +45,29 @@ app.post('/remote/env/install/node', async c => {
 })
 
 let runningInstallSteamCMD = false
-
+let runningInstallSteamCMD_STDOUT: string[] = []
 app.post('/remote/env/install/steamCMD', async c => {
   if (runningInstallSteamCMD) {
     return c.json({
       success: false,
-      message: 'Another installation is running'
+      message: 'Another installation is running',
+      stdout: runningInstallSteamCMD_STDOUT
     })
   }
-  const ssh = await getSSH()
   runningInstallSteamCMD = true
+  const ssh = await getSSH()
   ssh.execCommand(
-    'curl -sqkL https://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz',
+    'curl -sL https://deb.nodesource.com/setup_22.x | sudo -E bash -',
+    // 'curl -sqkL https://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz',
     {
+      onStdout: chunk => {
+        console.log(chunk.toString())
+        runningInstallSteamCMD_STDOUT.push(chunk.toString())
+      },
       onChannel: channel => {
         channel.on('exit', () => {
           runningInstallSteamCMD = false
+          runningInstallSteamCMD_STDOUT = []
           console.log('close channel')
         })
       }
