@@ -13,6 +13,8 @@ import { stringify } from 'ini'
 import { DST_SAVE_PATH } from './const'
 import { createCluster } from './utils/create'
 import server from './server'
+import remote from './remote'
+
 const sleep = (time: number) => {
   return new Promise(resolve => {
     setTimeout(resolve, time)
@@ -96,5 +98,6 @@ app.get('/api/installSystemLibraries', async c => {
 })
 
 app.route('/api', server)
+app.route('/api', remote)
 
 export default app
