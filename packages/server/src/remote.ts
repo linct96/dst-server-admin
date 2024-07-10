@@ -56,13 +56,17 @@ app.post('/remote/env/install/steamCMD', async c => {
   }
   runningInstallSteamCMD = true
   const ssh = await getSSH()
+  await ssh.execCommand(`mkdir -p /root/steam_cmd_download`)
   ssh.execCommand(
-    'curl -sL https://deb.nodesource.com/setup_22.x | sudo -E bash -',
-    // 'curl -sqkL https://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz',
+    `curl -sqkL https://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz | tar zxf - -C /root/steam_cmd_download`,
     {
       onStdout: chunk => {
         console.log(chunk.toString())
         runningInstallSteamCMD_STDOUT.push(chunk.toString())
+      },
+      onStderr(chunk) {
+        console.log(chunk.toString())
+        // runningInstallSteamCMD_STDOUT.push(chunk.toString())
       },
       onChannel: channel => {
         channel.on('exit', () => {
