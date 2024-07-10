@@ -49,19 +49,19 @@ function Test() {
       // console.log('initOS result', result)
     }
   }
-  const installSteamCMD = async () => {
-    const res = await fetch(`${SERVER_URL}/api/remote/env/install/steamCMD`, {
+  const installGameServer = async () => {
+    const res = await fetch(`${SERVER_URL}/api/remote/env/install/gameServer`, {
       method: 'POST'
     })
     if (res.ok) {
       const result = await res.json()
-      console.log('installSteamCMD result', result)
+      console.log('installGameServer result', result)
     }
   }
   return (
     <div>
       <Space direction="vertical">
-        <Button onClick={installSteamCMD}>安装steamCMD</Button>
+        <Button onClick={installGameServer}>installGameServer</Button>
         <Button onClick={installNode}>安装node</Button>
         <Button onClick={serverInit}>系统初始化</Button>
         <Button onClick={getGlobalVar}>get global var</Button>
