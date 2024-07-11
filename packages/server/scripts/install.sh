@@ -111,7 +111,7 @@ function main(){
     error "很遗憾！本脚本暂时只支持Debian7+和Ubuntu12+和CentOS7+的系统！" && exit 1
   fi
 
-  if [ ! -f ${SteamCMDPath}/steamcmd.sh ]; then
+  if [ ! -f "${SteamCMDPath}/steamcmd.sh" ]; then
     log "steamCMD 未安装"
     install_lib
     install_steamCMD
@@ -119,7 +119,7 @@ function main(){
     log "steamCMD 已安装"
   fi
 
-  if [ -z ${DSTServerPath}/version.txt ]; then
+  if [ ! -f "${DSTServerPath}/version.txt" ]; then
     log "游戏文件未安装"
     update_dst_server
   else
