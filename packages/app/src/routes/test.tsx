@@ -58,9 +58,39 @@ function Test() {
       console.log('installGameServer result', result)
     }
   }
+  const putFiles = async () => {
+    const res = await fetch(`${SERVER_URL}/api/remote/save/create`, {
+      method: 'POST'
+    })
+    if (res.ok) {
+      const result = await res.json()
+      console.log('putFiles result', result)
+    }
+  }
+  const startServer = async () => {
+    const res = await fetch(`${SERVER_URL}/api/remote/server/start`, {
+      method: 'POST'
+    })
+    if (res.ok) {
+      const result = await res.json()
+      console.log('startServer result', result)
+    }
+  }
+  const getSaves = async () => {
+    const res = await fetch(`${SERVER_URL}/api/remote/status/runningServer`, {
+      method: 'GET'
+    })
+    if (res.ok) {
+      const result = await res.json()
+      console.log('getSaves result', result)
+    }
+  }
   return (
     <div>
       <Space direction="vertical">
+        <Button onClick={getSaves}>getSaves</Button>
+        <Button onClick={startServer}>start server</Button>
+        <Button onClick={putFiles}>put files</Button>
         <Button onClick={installGameServer}>installGameServer</Button>
         <Button onClick={installNode}>安装node</Button>
         <Button onClick={serverInit}>系统初始化</Button>
