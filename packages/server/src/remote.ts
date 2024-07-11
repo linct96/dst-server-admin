@@ -58,6 +58,11 @@ const checkInstallGameServer = async (isLocal = false) => {
 
 const app = new Hono()
 
+app.post('/remote/test', async c => {
+  const ssh = await getSSH()
+  ssh.execCommand(`ping cip.cc`)
+  return c.json({ success: true, message: 'hello' })
+})
 let running = false
 app.post('/remote/env/install/node', async c => {
   if (running) {

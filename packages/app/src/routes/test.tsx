@@ -85,6 +85,15 @@ function Test() {
       console.log('getSaves result', result)
     }
   }
+  const test = async () => {
+    const res = await fetch(`${SERVER_URL}/api/remote/test`, {
+      method: 'POST'
+    })
+    if (res.ok) {
+      const result = await res.json()
+      console.log('getSaves result', result)
+    }
+  }
   return (
     <div>
       <Space direction="vertical">
@@ -97,6 +106,7 @@ function Test() {
         <Button onClick={getGlobalVar}>get global var</Button>
         <Button onClick={init}>init</Button>
         <Button onClick={createSave}>create save</Button>
+        <Button onClick={test}>test</Button>
       </Space>
     </div>
   )
