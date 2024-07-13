@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import './App.css'
 import { Button, Input } from 'antd'
 import { SERVER_URL } from './const'
 

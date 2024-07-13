@@ -1,10 +1,13 @@
 import React from 'react'
-import ReactDOM from 'react-dom/client'
-import './index.css'
+import { createRoot } from 'react-dom/client'
 import RouterRegister from './RouterRegister'
+import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <RouterRegister />
-  </React.StrictMode>
-)
+const $root = document.getElementById('root')
+if ($root) {
+  createRoot($root).render(
+    <React.StrictMode>
+      <RouterRegister />
+    </React.StrictMode>
+  )
+}
