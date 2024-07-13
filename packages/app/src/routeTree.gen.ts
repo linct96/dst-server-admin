@@ -14,31 +14,31 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TestImport } from './routes/test'
+import { Route as HomeImport } from './routes/home'
+import { Route as IndexImport } from './routes/index'
 
 // Create Virtual Routes
 
-const HomeLazyImport = createFileRoute('/home')()
-const IndexLazyImport = createFileRoute('/')()
 const InitializeModeLazyImport = createFileRoute('/initialize/mode')()
 const ClusterFormLazyImport = createFileRoute('/cluster/form')()
 const ClusterCoolLazyImport = createFileRoute('/cluster/cool')()
 
 // Create/Update Routes
 
-const HomeLazyRoute = HomeLazyImport.update({
-  path: '/home',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/home.lazy').then((d) => d.Route))
-
 const TestRoute = TestImport.update({
   path: '/test',
   getParentRoute: () => rootRoute,
 } as any)
 
-const IndexLazyRoute = IndexLazyImport.update({
+const HomeRoute = HomeImport.update({
+  path: '/home',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const IndexRoute = IndexImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
+} as any)
 
 const InitializeModeLazyRoute = InitializeModeLazyImport.update({
   path: '/initialize/mode',
@@ -65,7 +65,14 @@ declare module '@tanstack/react-router' {
       id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexLazyImport
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeImport
       parentRoute: typeof rootRoute
     }
     '/test': {
@@ -73,13 +80,6 @@ declare module '@tanstack/react-router' {
       path: '/test'
       fullPath: '/test'
       preLoaderRoute: typeof TestImport
-      parentRoute: typeof rootRoute
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeLazyImport
       parentRoute: typeof rootRoute
     }
     '/cluster/cool': {
@@ -109,9 +109,9 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export const routeTree = rootRoute.addChildren({
-  IndexLazyRoute,
+  IndexRoute,
+  HomeRoute,
   TestRoute,
-  HomeLazyRoute,
   ClusterCoolLazyRoute,
   ClusterFormLazyRoute,
   InitializeModeLazyRoute,
@@ -126,21 +126,21 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/test",
         "/home",
+        "/test",
         "/cluster/cool",
         "/cluster/form",
         "/initialize/mode"
       ]
     },
     "/": {
-      "filePath": "index.lazy.tsx"
+      "filePath": "index.tsx"
+    },
+    "/home": {
+      "filePath": "home.tsx"
     },
     "/test": {
       "filePath": "test.tsx"
-    },
-    "/home": {
-      "filePath": "home.lazy.tsx"
     },
     "/cluster/cool": {
       "filePath": "cluster/cool.lazy.tsx"

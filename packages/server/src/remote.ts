@@ -3,6 +3,7 @@ import { stream } from 'hono/streaming'
 import { getSSH } from './ssh'
 import { accessSync, constants } from 'node:fs'
 import { getDedicatedServerPid, getDedicatedServerSaves } from './utils/commond'
+import { NodeSSH } from 'node-ssh'
 
 const checkInstallSteamCMD = async (isLocal = false) => {
   const STEAM_CMD_PATH = '/root/steam_cmd_download'
@@ -58,6 +59,18 @@ const checkInstallGameServer = async (isLocal = false) => {
 
 const app = new Hono()
 
+app.post('/remote/connect', async c => {
+  const json = await c.req.json()
+  // console.log('json', json.host)
+  const ssh = new NodeSSH()
+  await ssh.connect({
+    host: json.host,
+    username: 'root',
+    privateKey: json.key
+  })
+
+  return c.json({ success: true, data: ssh.isConnected() })
+})
 app.post('/remote/test', async c => {
   const ssh = await getSSH()
   ssh.execCommand(`ping cip.cc`)
@@ -174,7 +187,7 @@ app.post('/remote/env/install/steamCMD', async c => {
 
 let runningInstallGameServer = false
 const runningInstallGameServer_STDOUT: string[] = []
-const runningInstallGameServer_STDERR: string[] = []
+// const runningInstallGameServer_STDERR: string[] = []
 app.post('/remote/env/install/gameServer', async c => {
   const STEAM_CMD_PATH = '/root/steam_cmd_download'
   const DST_SERVER_PATH = '/root/dst_server_download'
