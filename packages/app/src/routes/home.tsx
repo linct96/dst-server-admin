@@ -23,6 +23,7 @@ pUZpmtDkpvmUQ/zt+DM7AAAAFWxpbmNoYW90aW5nQE1CUC5sb2NhbA==
   connectType: 'key'
 }
 function Home() {
+  return null
   const [form] = Form.useForm<FieldType>()
   const connectType = Form.useWatch(['connectType'], form)
   const onFinish: FormProps<FieldType>['onFinish'] = values => {
@@ -56,28 +57,35 @@ function Home() {
           onFinishFailed={onFinishFailed}
           autoComplete="off"
         >
-          <Form.Item name="host" label="主机ip">
+          <Form.Item name="host" required label="主机ip">
             <Input placeholder="请输入主机ip" />
+          </Form.Item>
+          <Form.Item name="username" label="用户名">
+            <Input placeholder="默认为root" />
           </Form.Item>
           <Form.Item name="port" label="端口">
             <InputNumber placeholder="默认为22" controls={false} />
           </Form.Item>
-          <Form.Item label="登录方式">
-            {/* <Input placeholder="请输入密码" /> */}
+          <Form.Item required label="登录方式">
             <Form.Item name="connectType" noStyle>
               <Radio.Group buttonStyle="solid">
                 <Radio.Button value="password">密码</Radio.Button>
                 <Radio.Button value="key">密钥</Radio.Button>
               </Radio.Group>
             </Form.Item>
+
             {connectType === 'key' && (
               <Form.Item name="key" style={{ marginTop: '12px' }} noStyle>
-                <Input.TextArea placeholder="请输入密钥" />
+                <Input.TextArea
+                  placeholder="请输入密钥"
+                  style={{ marginTop: '12px' }}
+                  rows={4}
+                />
               </Form.Item>
             )}
             {connectType === 'password' && (
               <Form.Item name="password" style={{ marginTop: '12px' }} noStyle>
-                <Input placeholder="请输入密码" />
+                <Input placeholder="请输入密码" style={{ marginTop: '12px' }} />
               </Form.Item>
             )}
           </Form.Item>

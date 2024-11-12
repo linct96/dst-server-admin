@@ -61,7 +61,7 @@ const app = new Hono()
 
 app.post('/remote/connect', async c => {
   const json = await c.req.json()
-  // console.log('json', json.host)
+  console.log('json', json)
   const ssh = new NodeSSH()
   await ssh.connect({
     host: json.host,
