@@ -1,7 +1,7 @@
 use axum::{http::HeaderMap, Json};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
-use super::res::{Res,Result};
-
+use crate::api::res::Res;
+// use super::res::{Res,Result};
 
 
 pub async fn login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> Res<AuthBody> {

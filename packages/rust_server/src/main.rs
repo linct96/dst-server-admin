@@ -1,12 +1,13 @@
-mod api;
 mod bootstrap;
 mod service;
-use api::res::Res;
-use axum::{http::HeaderMap, routing::get, Json, Router};
+mod utils;
+mod api;
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
-// use serde::{Deserialize, Serialize};
+use api::res::Res;
 
-// basic handler that responds with a static string
+use axum::{http::HeaderMap, routing::get, Json, Router};
+
+
 async fn root() -> &'static str {
     "Hello, World!"
 }
@@ -20,25 +21,25 @@ pub async fn t_login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> 
         Ok(x) => {
             print!("login success: {}", x.exp);
             Res::<AuthBody>::with_data(x)
-        },
+        }
         Err(e) => Res::<AuthBody>::with_err(&e.to_string()),
     }
 }
-async fn t_login3(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> Res<AuthBody> {
+async fn t_login3() -> Res<AuthBody> {
     let res = login_service2().await;
     print!("1:");
     match res {
         Ok(x) => {
             print!("login success: {}", x.exp);
             Res::<AuthBody>::with_data(x)
-        },
+        }
         Err(e) => Res::<AuthBody>::with_err(&e.to_string()),
     }
 }
 
 #[tokio::main]
 async fn main() {
-    // bootstrap::init();
+    bootstrap::init();
     // bootstrap::say();
     println!("Hello, world123!");
     // initialize tracing
