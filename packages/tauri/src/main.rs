@@ -5,7 +5,6 @@ use std::io::{self, copy, BufRead, Cursor, Read, Write};
 use std::process::{Command, Stdio};
 use std::{fs, path};
 use std::error::Error;
-
 use axum::routing::{get, post};
 use tauri::api::path::home_dir;
 use tauri::api::shell;

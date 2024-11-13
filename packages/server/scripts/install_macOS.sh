@@ -54,7 +54,7 @@ update_dst_server(){
     log "开始获取最新版本游戏文件"
     cd ${SteamCMDPath}
     chmod +x ./steamcmd.sh
-    ./steamcmd.sh +login anonymous +app_update 343050 validate +quit
+    ./steamcmd.sh +force_install_dir ${HomePath}/dst +login anonymous +app_update 343050 validate +quit
     success "最新版本游戏文件安装成功"
   else
     error "steamCMD 未安装"

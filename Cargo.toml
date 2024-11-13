@@ -1,11 +1,13 @@
 [workspace]
+resolver = "2"
 
 members = [
-    "packages/tauri"
+  "packages/rust_server",
+  # "packages/tauri"
 ]
 
 [profile.release]
-strip = true  # Automatically strip symbols from the binary.
+strip = true      # Automatically strip symbols from the binary.
 opt-level = "z"
 lto = true
 codegen-units = 1
