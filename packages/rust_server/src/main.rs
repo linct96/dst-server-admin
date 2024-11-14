@@ -2,6 +2,8 @@ mod bootstrap;
 mod service;
 mod utils;
 mod api;
+mod db;
+mod config;
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
 use api::res::Res;
 
