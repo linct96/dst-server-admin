@@ -8,11 +8,11 @@ use std::{fs, path::Path};
 
 use api::res::{Res, ResBody};
 use axum::{http::HeaderMap, routing::get, Json, Router};
-use include_dir::{include_dir, Dir};
+
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
+use asset::STATIC_DIR;
+use utils::shell::run_cmd_command;
 
-
-pub static STATIC_DIR: Dir = include_dir!("static");
 
 async fn t_login2(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> &'static str {
     "Hello, World!"
@@ -40,19 +40,39 @@ async fn t_login3() -> Res<AuthBody> {
     }
 }
 
+
 #[tokio::main]
 async fn main() {
     // bootstrap::init().await;
-    // bootstrap::say();
+
     println!("Hello, world123!");
 
     // 获取 resources 目录中的 config.json 文件
-    if let Some(file) = STATIC_DIR.get_file("install_macOS.json") {
-        // 打印文件内容
-        println!("File contents:\n{}", file.contents_utf8().unwrap());
+    // if let Some(file) = STATIC_DIR.get_file("install_macOS2.json") {
+    //     // 打印文件内容
+    //     println!("File contents:\n{}", file.contents_utf8().unwrap());
+    // } else {
+    //     println!("File not found");
+    // }
+
+    // if let Some(file) = STATIC_DIR.get_file("install_macOS2.json") {
+    //     // 打印文件内容
+        
+    //     println!("File contents:\n{}", file.contents_utf8().unwrap());
+    // } else {
+    //     println!("File not found");
+    // }
+    if let Some(file) = STATIC_DIR.get_file("install.bat") {
+        // 打印文件内'
+        let file_path = file.path().to_str().unwrap();
+        println!("path: {}",file_path);
+        // println!("File contents:\n{}", file.contents_utf8().unwrap());
+        run_cmd_command( file_path);
     } else {
         println!("File not found");
     }
+
+    
 
     // 定义静态文件的路径
     // let file_path = Path::new("asset/install_macOS.json");

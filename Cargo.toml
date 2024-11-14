@@ -2,9 +2,13 @@
 resolver = "2"
 
 members = [
-  "packages/rust_server",
+  # "packages/rust_server",
+  "asset",
+  "server"
   # "packages/tauri"
 ]
+
+
 
 [profile.release]
 strip = true      # Automatically strip symbols from the binary.
