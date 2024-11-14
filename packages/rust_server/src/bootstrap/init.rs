@@ -1,23 +1,11 @@
-use std::{env, error::Error};
-
-use axum::{routing::get, Router};
+use std::process::Command;
 use rusqlite::{config, Connection, Result};
 
 use crate::{
+    api,
     db::db::DB,
     utils::file::{self, create_dir},
 };
-
-// use crate::utils::file
-
-fn say() {
-    println!("Hello, world!");
-}
-
-fn start_server() {
-    tracing_subscriber::fmt::init();
-    // build our application with a route
-}
 
 fn init_database() -> Result<()> {
     let db = DB::new().unwrap();
@@ -41,9 +29,21 @@ fn init_config() {
         }
     }
 }
-pub fn entry() {
+
+async fn init_server() {
+    tracing_subscriber::fmt::init();
+    let router = api::route::root();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, router).await.unwrap();
+}
+
+pub async fn entry() {
+    
     init_config();
     init_database().expect("Failed to initialize database");
+    init_server().await;
+
+    
     // println!("home_dir: {}", home_dir.unwrap().display());
     // start_server();
 }

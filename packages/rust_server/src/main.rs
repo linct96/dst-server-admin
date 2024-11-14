@@ -1,18 +1,19 @@
+mod api;
 mod bootstrap;
+mod config;
+mod db;
 mod service;
 mod utils;
-mod api;
-mod db;
-mod config;
-use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
-use api::res::Res;
+use std::{fs, path::Path};
 
+use api::res::{Res, ResBody};
 use axum::{http::HeaderMap, routing::get, Json, Router};
+use include_dir::{include_dir, Dir};
+use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
+use utils::system::SystemInfo;
 
+static STATIC_DIR: Dir = include_dir!("static");
 
-async fn root() -> &'static str {
-    "Hello, World!"
-}
 async fn t_login2(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> &'static str {
     "Hello, World!"
 }
@@ -41,20 +42,24 @@ async fn t_login3() -> Res<AuthBody> {
 
 #[tokio::main]
 async fn main() {
-    bootstrap::init();
+    // bootstrap::init().await;
     // bootstrap::say();
     println!("Hello, world123!");
-    // initialize tracing
-    tracing_subscriber::fmt::init();
-    // build our application with a route
-    let app = Router::new()
-        // `GET /` goes to `root`
-        .route("/", get(root))
-        .route("/login", get(t_login))
-        .route("/login3", get(t_login3));
-    // `POST /users` goes to `create_user`
-    // .route("/users", post(create_user));
-    // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+
+    // 获取 resources 目录中的 config.json 文件
+    if let Some(file) = STATIC_DIR.get_file("install_macOS.json") {
+        // 打印文件内容
+        println!("File contents:\n{}", file.contents_utf8().unwrap());
+    } else {
+        println!("File not found");
+    }
+
+    // 定义静态文件的路径
+    // let file_path = Path::new("asset/install_macOS.json");
+
+    // // 读取文件内容
+    // let contents = fs::read_to_string(&file_path).expect("Failed to read file");
+
+    // // 打印文件内容
+    // println!("File contents:\n{}", contents);
 }
