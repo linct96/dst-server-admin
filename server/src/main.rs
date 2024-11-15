@@ -4,15 +4,14 @@ mod config;
 mod db;
 mod service;
 mod utils;
-use std::{fs, path::Path};
+use std::{env, fs, path::Path};
 
 use api::res::{Res, ResBody};
 use axum::{http::HeaderMap, routing::get, Json, Router};
 
-use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
 use asset::STATIC_DIR;
-use utils::shell::run_cmd_command;
-
+use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
+use utils::shell::{run_cmd_command, run_shell_command};
 
 async fn t_login2(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> &'static str {
     "Hello, World!"
@@ -40,7 +39,6 @@ async fn t_login3() -> Res<AuthBody> {
     }
 }
 
-
 #[tokio::main]
 async fn main() {
     // bootstrap::init().await;
@@ -57,22 +55,24 @@ async fn main() {
 
     // if let Some(file) = STATIC_DIR.get_file("install_macOS2.json") {
     //     // 打印文件内容
-        
+
     //     println!("File contents:\n{}", file.contents_utf8().unwrap());
     // } else {
     //     println!("File not found");
     // }
-    if let Some(file) = STATIC_DIR.get_file("install.bat") {
+    if let Some(file) = STATIC_DIR.get_file("install_macOS.sh") {
         // 打印文件内'
         let file_path = file.path().to_str().unwrap();
-        println!("path: {}",file_path);
+        println!("path: {}", file_path);
+        let content = file.contents_utf8().unwrap();
+        let current_exe_path = std::env::current_exe().expect("Failed to get current executable path");
+        // env::current_exe().unwrap().parent().unwrap().display().to_string();
+        println!("current_exe: {}", current_exe_path.to_str().unwrap());
         // println!("File contents:\n{}", file.contents_utf8().unwrap());
-        run_cmd_command( file_path);
+        run_shell_command(content);
     } else {
         println!("File not found");
     }
-
-    
 
     // 定义静态文件的路径
     // let file_path = Path::new("asset/install_macOS.json");
