@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev:app": "pnpm --filter=app dev",
-    "dev:server": "pnpm --filter=server dev",
+    "dev:server": "cargo run",
     "dev:web": "pnpm --filter=web dev",
+    "dev:app": "pnpm --filter=app dev",
     "dev:tauri": "pnpm --filter=tauri dev",
     "build": "pnpm --filter=web build",
     "build:web": "pnpm --filter=web build",

@@ -1,5 +1,5 @@
-use std::process::Command;
 use rusqlite::{config, Connection, Result};
+use std::process::Command;
 
 use crate::{
     api,
@@ -32,18 +32,20 @@ fn init_config() {
 
 async fn init_server() {
     tracing_subscriber::fmt::init();
+    let port = "9527";
     let router = api::route::root();
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
+        .await
+        .unwrap();
+    println!("Server started on http://localhost:{}", port);
     axum::serve(listener, router).await.unwrap();
 }
 
 pub async fn entry() {
-    
     init_config();
     init_database().expect("Failed to initialize database");
     init_server().await;
 
-    
     // println!("home_dir: {}", home_dir.unwrap().display());
     // start_server();
 }

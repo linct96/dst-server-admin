@@ -27,14 +27,17 @@ function Home() {
   // return null
   const [form] = Form.useForm<FieldType>()
 
-  useEffect(()=>{
-    // fetch(`${SERVER_URL}/api/remote/connect`, {
-    //   method: 'POST',
-    //   body: JSON.stringify({})
-    // }).then(res => {
-    //   console.log(res)
-    // })
-  },[])
+  const init = async () => {
+    const res = await fetch(`${SERVER_URL}/api/auth/system/get_system_info`, {
+      method: 'GET',
+      // body: JSON.stringify({})
+    })
+    const data = await res.json()
+    console.log(data)
+  }
+  useEffect(() => {
+    init()
+  }, [])
   return (
     <div className="p-2">
       12
