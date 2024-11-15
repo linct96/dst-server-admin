@@ -15,3 +15,10 @@ strip = true      # Automatically strip symbols from the binary.
 opt-level = "z"
 lto = true
 codegen-units = 1
+
+
+[source.crates-io]
+replace-with = 'ustc'
+
+[source.ustc]
+registry = "https://mirrors.ustc.edu.cn/crates.io-index"
