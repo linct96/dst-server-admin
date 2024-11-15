@@ -8,6 +8,7 @@
     "dev:server": "pnpm --filter=server dev",
     "dev:web": "pnpm --filter=web dev",
     "dev:tauri": "pnpm --filter=tauri dev",
+    "build": "pnpm --filter=app build",
     "build:web": "pnpm --filter=web build",
     "build:tauri": "pnpm --filter=tauri build"
   },
