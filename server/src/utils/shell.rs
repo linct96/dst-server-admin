@@ -1,7 +1,7 @@
 use std::{io::{BufRead, BufReader}, process::{Command, Stdio}};
 
-pub fn run_shell_command(content: &str) {
-    let mut child_process = Command::new("sh")
+pub fn run_bash_command(content: &str) {
+    let mut child_process = Command::new("bash")
         .stderr(Stdio::piped())
         .stdout(Stdio::piped())
         .arg("-c")

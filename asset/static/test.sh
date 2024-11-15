@@ -41,7 +41,7 @@ txt_red(){
 }
 
 
-function install_steamCMD(){
+install_steamCMD(){
   log "开始安装 steamCMD"
   mkdir -p ${SteamCMDPath}
   cd ${SteamCMDPath}
@@ -62,7 +62,7 @@ update_dst_server(){
   fi
 }
 
-function main(){
+main(){
   if [ ! -f "${SteamCMDPath}/steamcmd.sh" ]; then
     log "steamCMD 未安装"
     install_steamCMD

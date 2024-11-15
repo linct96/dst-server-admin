@@ -49,7 +49,7 @@ function install_steamCMD(){
   success "steamCMD 安装成功"
 }
 
-update_dst_server(){
+function update_dst_server(){
   if [ -f ${SteamCMDPath}/steamcmd.sh ]; then
     log "开始获取最新版本游戏文件"
     cd ${SteamCMDPath}

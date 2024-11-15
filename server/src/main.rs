@@ -11,7 +11,7 @@ use axum::{http::HeaderMap, routing::get, Json, Router};
 
 use asset::STATIC_DIR;
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
-use utils::shell::{run_cmd_command, run_shell_command};
+use utils::shell::{run_cmd_command, run_bash_command};
 
 async fn t_login2(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> &'static str {
     "Hello, World!"
@@ -41,7 +41,7 @@ async fn t_login3() -> Res<AuthBody> {
 
 #[tokio::main]
 async fn main() {
-    // bootstrap::init().await;
+    bootstrap::init().await;
 
     println!("Hello, world123!");
 
@@ -60,19 +60,21 @@ async fn main() {
     // } else {
     //     println!("File not found");
     // }
-    if let Some(file) = STATIC_DIR.get_file("install_macOS.sh") {
-        // 打印文件内'
-        let file_path = file.path().to_str().unwrap();
-        println!("path: {}", file_path);
-        let content = file.contents_utf8().unwrap();
-        let current_exe_path = std::env::current_exe().expect("Failed to get current executable path");
-        // env::current_exe().unwrap().parent().unwrap().display().to_string();
-        println!("current_exe: {}", current_exe_path.to_str().unwrap());
-        // println!("File contents:\n{}", file.contents_utf8().unwrap());
-        run_shell_command(content);
-    } else {
-        println!("File not found");
-    }
+    // let file_name = "install_linux.sh";
+    // // let file_name = "test.sh";
+    // if let Some(file) = STATIC_DIR.get_file(file_name) {
+    //     // 打印文件内'
+    //     let file_path = file.path().to_str().unwrap();
+    //     println!("path: {}", file_path);
+    //     let content = file.contents_utf8().unwrap();
+    //     let current_exe_path = std::env::current_exe().expect("Failed to get current executable path");
+    //     // env::current_exe().unwrap().parent().unwrap().display().to_string();
+    //     // println!("current_exe: {}", current_exe_path.to_str().unwrap());
+    //     // println!("File contents:\n{}", file.contents_utf8().unwrap());
+    //     run_bash_command(content);
+    // } else {
+    //     println!("File not found");
+    // }
 
     // 定义静态文件的路径
     // let file_path = Path::new("asset/install_macOS.json");

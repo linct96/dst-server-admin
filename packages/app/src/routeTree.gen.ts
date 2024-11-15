@@ -14,6 +14,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TestImport } from './routes/test'
+import { Route as HomebakImport } from './routes/home_bak'
 import { Route as HomeImport } from './routes/home'
 import { Route as IndexImport } from './routes/index'
 
@@ -27,6 +28,11 @@ const ClusterCoolLazyImport = createFileRoute('/cluster/cool')()
 
 const TestRoute = TestImport.update({
   path: '/test',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const HomebakRoute = HomebakImport.update({
+  path: '/home_bak',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -75,6 +81,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeImport
       parentRoute: typeof rootRoute
     }
+    '/home_bak': {
+      id: '/home_bak'
+      path: '/home_bak'
+      fullPath: '/home_bak'
+      preLoaderRoute: typeof HomebakImport
+      parentRoute: typeof rootRoute
+    }
     '/test': {
       id: '/test'
       path: '/test'
@@ -111,6 +124,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   IndexRoute,
   HomeRoute,
+  HomebakRoute,
   TestRoute,
   ClusterCoolLazyRoute,
   ClusterFormLazyRoute,
@@ -127,6 +141,7 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/home",
+        "/home_bak",
         "/test",
         "/cluster/cool",
         "/cluster/form",
@@ -138,6 +153,9 @@ export const routeTree = rootRoute.addChildren({
     },
     "/home": {
       "filePath": "home.tsx"
+    },
+    "/home_bak": {
+      "filePath": "home_bak.tsx"
     },
     "/test": {
       "filePath": "test.tsx"
