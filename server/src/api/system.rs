@@ -4,6 +4,7 @@ use std::{env, fs};
 use crate::api::res::{Res, ResBody};
 use crate::config::config::CONFIG_PATH;
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
+use crate::utils::file::resolve_path;
 use crate::utils::system::SystemInfo;
 use axum::routing::get;
 use axum::Router;
@@ -27,20 +28,20 @@ pub struct GameInfo {
     pub path: String,
     pub version: String,
 }
+
+// 获取游戏信息
 pub async fn get_game_info() -> ResBody<GameInfo> {
     let mut game_info = GameInfo {
         path: "".to_string(),
         version: "".to_string(),
     };
 
-    let dst_server_version_path = dirs::home_dir()
+    let dst_server_path = dirs::home_dir()
         .unwrap()
-        .join(PathBuf::from(CONFIG_PATH.dst_server_path))
-        .join("version.txt");
-
-    game_info.path = dst_server_version_path.to_str().unwrap().to_string();
+        .join(resolve_path(CONFIG_PATH.dst_server_path));
+    let dst_server_version_path = dst_server_path.join("version.txt");
+    game_info.path = dst_server_path.to_str().unwrap().to_string();
     if dst_server_version_path.exists() {
-        // let dst_version = fs::read_to_string(dst_server_version_path);
         if let Ok(dst_version) = fs::read_to_string(dst_server_version_path) {
             game_info.version = dst_version;
         }
