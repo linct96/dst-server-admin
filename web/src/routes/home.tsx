@@ -28,8 +28,8 @@ function Home() {
   const [form] = Form.useForm<FieldType>()
 
   const init = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/get_system_info`, {
-      method: 'GET',
+    const res = await fetch(`${SERVER_URL}/api/auth/system/get_game_info`, {
+      method: 'GET'
       // body: JSON.stringify({})
     })
     const data = await res.json()
@@ -38,11 +38,7 @@ function Home() {
   useEffect(() => {
     init()
   }, [])
-  return (
-    <div className="p-2">
-      12
-    </div>
-  )
+  return <div className="p-2">12</div>
 }
 
 export const Route = createFileRoute('/home')({
