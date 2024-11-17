@@ -52,10 +52,13 @@ function Home() {
   }
 
   const handleUpdateGame = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/update_dst_server`, {
-      method: 'POST',
-      body: JSON.stringify({})
-    })
+    const res = await fetch(
+      `${SERVER_URL}/api/auth/system/update_dst_server_windows`,
+      {
+        method: 'POST',
+        body: JSON.stringify({})
+      }
+    )
     const data = await res.json()
     console.log(data)
   }

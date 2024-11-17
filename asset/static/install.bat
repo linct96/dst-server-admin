@@ -1,3 +1,4 @@
-chcp 65001
-echo 中文测试
+
+echo %USERPROFILE%
+certutil -urlcache -split -f https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip %USERPROFILE%\steamcmd.zip
 pause

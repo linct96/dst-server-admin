@@ -1,5 +1,7 @@
 use std::{env::consts::OS, path::PathBuf};
 
+use crate::utils::file::resolve_path;
+
 pub struct Config {
     pub steam_cmd_path: &'static str,
     pub dst_server_path: &'static str,
@@ -32,6 +34,7 @@ const DST_SERVER_PATH: &'static str =
     "Steam/steamapps/common/Don't Starve Together Dedicated Server";
 const DST_SAVE_PATH: &'static str = "Steam/steamapps/common/Don't Starve Together Dedicated Server";
 
+#[derive(Debug)]
 pub struct PathConfig {
     pub steam_cmd_path: PathBuf,
     pub dst_server_path: PathBuf,
@@ -39,9 +42,10 @@ pub struct PathConfig {
 }
 impl PathConfig {
     pub fn new() -> Self {
+        
         let home_dir = dirs::home_dir().unwrap();
-        let base_steam_cmd_path = home_dir.join(STEAM_CMD_PATH);
-        let mut base_dst_server_path = home_dir.join(DST_SERVER_PATH);
+        let base_steam_cmd_path = home_dir.join(resolve_path(STEAM_CMD_PATH));
+        let mut base_dst_server_path = home_dir.join(resolve_path(DST_SERVER_PATH));
         let mut base_dst_save_path = home_dir.join(DST_SAVE_PATH);
 
         if OS == "macos" {

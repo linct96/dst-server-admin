@@ -1,19 +1,22 @@
 use std::env::consts::OS;
+use std::fs::File;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
 
 use crate::api::res::{Res, ResBody};
-use crate::config::config::{PathConfig, CONFIG_PATH};
+use crate::config::config::{Config, PathConfig, CONFIG_PATH};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
-use crate::utils::file::trans_content_to_path;
+use crate::utils::file::{trans_content_to_path, unzip_file};
 use crate::utils::system::SystemInfo;
 use crate::utils::{file, shell};
 use asset::STATIC_DIR;
 use axum::routing::{get, post};
 use axum::Router;
 use axum::{http::HeaderMap, Json};
+use reqwest::Client;
 use serde::Serialize;
+use std::io::{self, Write};
 // use super::res::{Res,Result};
 
 pub fn router_system() -> Router {
@@ -22,6 +25,10 @@ pub fn router_system() -> Router {
         .route("/get_game_info", get(get_game_info)) // 登录
         .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
         .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
+        .route(
+            "/update_dst_server_windows",
+            post(update_dst_server_windows),
+        ) // 启动游戏服务器
 }
 pub async fn get_system_info() -> ResBody<SystemInfo> {
     let system_info = SystemInfo::get();
@@ -66,6 +73,8 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
 
     let path_config = PathConfig::new();
 
+    println!("path_config: {:#?}", path_config);
+
     game_info.path = path_config.dst_server_path.to_str().unwrap().to_string();
     let dst_version_path: PathBuf = path_config.dst_server_path.join("version.txt");
     if path_config.dst_server_path.exists() {
@@ -73,11 +82,30 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
             game_info.version = dst_version;
         }
     }
+    
 
     ResBody::success(game_info)
 }
+pub async fn update_dst_server_windows() -> ResBody<bool> {
+    let url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
+    // 下载文件的本地路径
+    let output_path = "./steamcmd.zip";
 
-pub async fn update_dst_server() -> ResBody<bool> {
+    // 创建一个 HTTP 客户端
+    let client = Client::new();
+    // 下载文件
+    let response = client.get(url).send().await.unwrap();
+    let bytes = response.bytes().await.unwrap();
+    let mut out_file = File::create(output_path).unwrap();
+    out_file.write_all(&bytes).unwrap();
+    let path_config = PathConfig::new();
+    println!("File downloaded to {}", output_path);
+    unzip_file(output_path,path_config.steam_cmd_path.to_str().unwrap()).await;
+
+    ResBody::success(true)
+}
+
+pub async fn update_dst_server_linux() -> ResBody<bool> {
     let mut sh_name = "install_linux.sh";
 
     if OS == "macos" {
@@ -96,6 +124,14 @@ pub async fn update_dst_server() -> ResBody<bool> {
         println!("File not found");
     }
     ResBody::success(true)
+}
+
+pub async fn update_dst_server() -> ResBody<bool> {
+    if OS == "windows" {
+        return update_dst_server_windows().await;
+    } else {
+        return update_dst_server_linux().await;
+    }
 }
 pub async fn get_system_info_v(
     header: HeaderMap,
