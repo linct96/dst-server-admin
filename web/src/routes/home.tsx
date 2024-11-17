@@ -67,6 +67,14 @@ function Home() {
     const json = await res.json()
     console.log(json.data)
   }
+  const handleStartDstServer = async () => {
+    const res = await fetch(`${SERVER_URL}/api/auth/system/get_game_info`, {
+      method: 'GET'
+      // body: JSON.stringify({})
+    })
+    const json = await res.json()
+    console.log(json.data)
+  }
   useEffect(() => {
     init()
   }, [])
@@ -151,7 +159,9 @@ function Home() {
             title="当前世界"
             extra={
               <Space>
-                <Button type="primary">重启</Button>
+                <Button type="primary" onClick={handleStartDstServer}>
+                  启动
+                </Button>
                 <Button danger>停止</Button>
               </Space>
             }

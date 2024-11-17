@@ -1,5 +1,7 @@
 use std::{
-    env::consts::OS, io::{BufRead, BufReader}, process::{Command, Stdio}
+    env::consts::OS,
+    io::{BufRead, BufReader},
+    process::{Command, Stdio},
 };
 
 pub fn run_command(content: &str) {
@@ -63,4 +65,17 @@ pub fn run_cmd_command(bat_file_path: &str) {
             String::from_utf8_lossy(&output.stderr)
         );
     }
+}
+
+pub fn run_command_test() {
+
+    // # cd "/root/Steam/steamapps/common/Don't Starve Together Dedicated Server/bin"
+    // # run_shared=(./dontstarve_dedicated_server_nullrenderer)
+    // # run_shared+=(-console_enabled)
+    // # run_shared+=(-cluster "ddd")
+    // # run_shared+=(-ugc_directory "/root/Steam/steamapps/common/Don't Starve Together Dedicated Server/ugc_mods")
+    // # run_shared+=(-region sing)
+    // # run_shared+=(-monitor_parent_process $)
+    // # run_shared+=(-shard "Forest1")
+    // # "${run_shared[@]}"
 }

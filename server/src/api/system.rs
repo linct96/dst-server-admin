@@ -1,10 +1,12 @@
 use std::env::consts::OS;
 use std::path::PathBuf;
+use std::process::Command;
 use std::{env, fs};
 
 use crate::api::res::{Res, ResBody};
 use crate::config::config::{PathConfig, CONFIG_PATH};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
+use crate::utils::file::trans_content_to_path;
 use crate::utils::system::SystemInfo;
 use crate::utils::{file, shell};
 use asset::STATIC_DIR;
@@ -19,6 +21,7 @@ pub fn router_system() -> Router {
         .route("/get_system_info", get(get_system_info)) // 登录
         .route("/get_game_info", get(get_game_info)) // 登录
         .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
+        .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
 }
 pub async fn get_system_info() -> ResBody<SystemInfo> {
     let system_info = SystemInfo::get();
@@ -31,6 +34,29 @@ pub struct GameInfo {
     pub version: String,
 }
 
+pub async fn start_dst_server() -> ResBody<bool> {
+    let mut sh_name = "run_cluster.sh";
+
+    if OS == "windows" {
+        sh_name = "install_windows.bat";
+    }
+
+    if let Some(file) = STATIC_DIR.get_file(sh_name) {
+        // 打印文件内'
+        // 构建 screen 命令
+        let temp_file_path = trans_content_to_path(file.contents_utf8().unwrap());
+        let mut command = Command::new("screen");
+        command
+            .arg("-dmS") // 以分离模式启动一个新的 screen 会话
+            .arg("my_session_name") // 指定会话名称
+            .arg("-c") // 使用 -c 选项指定配置文件
+            .arg(temp_file_path); // 传递临时文件路径作为配置文件
+    } else {
+        println!("File not found");
+    }
+    ResBody::success(true)
+}
+
 // 获取游戏信息
 pub async fn get_game_info() -> ResBody<GameInfo> {
     let mut game_info = GameInfo {
@@ -41,7 +67,7 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
     let path_config = PathConfig::new();
 
     game_info.path = path_config.dst_server_path.to_str().unwrap().to_string();
-    let dst_version_path = path_config.dst_server_path.join("version.txt");
+    let dst_version_path: PathBuf = path_config.dst_server_path.join("version.txt");
     if path_config.dst_server_path.exists() {
         if let Ok(dst_version) = fs::read_to_string(dst_version_path) {
             game_info.version = dst_version;

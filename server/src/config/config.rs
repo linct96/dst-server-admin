@@ -27,7 +27,7 @@ pub const CONFIG_PATH: Config = Config {
     dst_save_path: ".klei/DoNotStarveTogether",
 };
 
-const STEAM_CMD_PATH: &'static str = "steamCMD";
+const STEAM_CMD_PATH: &'static str = "steamcmd";
 const DST_SERVER_PATH: &'static str =
     "Steam/steamapps/common/Don't Starve Together Dedicated Server";
 const DST_SAVE_PATH: &'static str = "Steam/steamapps/common/Don't Starve Together Dedicated Server";
@@ -42,13 +42,15 @@ impl PathConfig {
         let home_dir = dirs::home_dir().unwrap();
         let base_steam_cmd_path = home_dir.join(STEAM_CMD_PATH);
         let mut base_dst_server_path = home_dir.join(DST_SERVER_PATH);
-        let base_dst_save_path = home_dir.join(DST_SAVE_PATH);
+        let mut base_dst_save_path = home_dir.join(DST_SAVE_PATH);
 
         if OS == "macos" {
             println!("macos");
             base_dst_server_path = home_dir
-                .join("Library/Application Support")
+                .join("Library/Application Support/dontstarve_dedicated_server_nullrenderer.app/Contents/MacOS")
                 .join(DST_SERVER_PATH);
+
+            base_dst_save_path = home_dir.join("Documents/Klei/DoNotStarveTogether");
             println!("{:?}", base_dst_server_path);
         }
         Self {
