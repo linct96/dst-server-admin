@@ -1,13 +1,15 @@
 use std::env::consts::OS;
-use std::fs::File;
+
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{env, fs};
+use axum::extract::path;
+use tokio::fs;
 
 use crate::api::res::{Res, ResBody};
 use crate::config::config::{Config, PathConfig, CONFIG_PATH};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
 use crate::utils::file::{download_file, trans_content_to_path, unzip_file};
+use crate::utils::shell::run_command;
 use crate::utils::system::SystemInfo;
 use crate::utils::{file, shell};
 
@@ -22,6 +24,7 @@ use std::io::{self, Write};
 
 pub fn router_system() -> Router {
     Router::new()
+        .route("/force_install_dst_server", post(force_install_dst_server)) // 登录
         .route("/get_system_info", get(get_system_info)) // 登录
         .route("/get_game_info", get(get_game_info)) // 登录
         .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
@@ -40,6 +43,32 @@ pub async fn get_system_info() -> ResBody<SystemInfo> {
 pub struct GameInfo {
     pub path: String,
     pub version: String,
+    pub server_installed: bool,
+}
+
+pub async fn remove_dst_server() {
+    let path_config = PathConfig::new();
+    let dst_server_path = path_config.dst_server_path.to_str().unwrap();
+    let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
+    if Path::new(dst_server_path).exists() {
+        fs::remove_dir_all(dst_server_path).await.unwrap();
+    }
+    if Path::new(steam_cmd_path).exists() {
+        fs::remove_dir_all(steam_cmd_path).await.unwrap();
+    }
+    if Path::new("steamcmd.zip").exists() {
+        fs::remove_file("steamcmd.zip").await.unwrap();
+    }
+}
+
+pub async fn force_install_dst_server() -> ResBody<bool> {
+    remove_dst_server().await;
+    println!("remove_dst_server success");
+    if OS == "windows" {
+        return update_dst_server_windows().await;
+    } else {
+        return update_dst_server_linux().await;
+    }
 }
 
 pub async fn start_dst_server() -> ResBody<bool> {
@@ -70,15 +99,16 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
     let mut game_info = GameInfo {
         path: "".to_string(),
         version: "".to_string(),
+        server_installed: false,
     };
 
     let path_config = PathConfig::new();
-    println!("path_config: {:#?}", path_config);
+    
     game_info.path = path_config.dst_server_path.to_str().unwrap().to_string();
     let dst_version_path: PathBuf = path_config.dst_server_path.join("version.txt");
     if path_config.dst_server_path.exists() {
-        if let Ok(dst_version) = fs::read_to_string(dst_version_path) {
-            game_info.version = dst_version;
+        if let Ok(dst_version) = fs::read_to_string(dst_version_path).await {
+            game_info.version = dst_version.replace("\n", "").replace("\r", "");
         }
     }
 
@@ -89,16 +119,19 @@ pub async fn update_dst_server_windows() -> ResBody<bool> {
     let output_path = "./steamcmd.zip";
     let path_config = PathConfig::new();
     if Path::new(output_path).exists() {
-        fs::remove_file(output_path).unwrap();
+        println!("exist steamcmd.zip");
+        // fs::remove_file(output_path).await.unwrap();
     } else {
         let res = download_file(url, output_path).await;
         if let Err(e) = res {
             return ResBody::err(false, e.to_string());
         }
-        unzip_file(output_path, path_config.steam_cmd_path.to_str().unwrap()).await;
-        
     }
+    let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
+    unzip_file(output_path, steam_cmd_path).await;
 
+    let script = format!("{}/steamcmd.exe +login anonymous +app_update 343050 validate +quit", steam_cmd_path);
+    run_command(&script);
     ResBody::success(true)
 }
 

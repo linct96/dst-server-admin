@@ -78,6 +78,16 @@ function Home() {
     const json = await res.json()
     console.log(json.data)
   }
+  const handleForceInstall = async () => {
+    const res = await fetch(
+      `${SERVER_URL}/api/auth/system/force_install_dst_server`,
+      {
+        method: 'POST',
+        body: JSON.stringify({})
+      }
+    )
+    const data = await res.json()
+  }
   useEffect(() => {
     init()
   }, [])
@@ -130,7 +140,7 @@ function Home() {
             title="饥荒服务器信息"
             extra={
               <Space>
-                <Button onClick={handleRefreshDstServer}>刷新</Button>
+                <Button onClick={handleForceInstall}>安装</Button>
               </Space>
             }
           >
