@@ -5,8 +5,12 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::time::Duration;
 
+use axum::body::Bytes;
+use reqwest::Error;
 use tempfile::NamedTempFile;
+use tokio::time::sleep;
 use zip::ZipArchive;
 
 use crate::config::config::Config;
@@ -42,6 +46,34 @@ pub fn trans_content_to_path(content: &str) -> PathBuf {
     return temp_file_path;
 }
 
+pub async fn download_file(url: &str, save_path: &str) -> Result<(), Error> {
+    let client = reqwest::Client::new();
+    let max_retries = 3;
+    let retry_delay = Duration::from_secs(2);
+
+    for attempt in 1..=max_retries {
+        match client.get(url).send().await {
+            Ok(response) => {
+                // 处理响应
+                let bytes = response.bytes().await?;
+                // 保存文件等操作
+                // 保存文件
+                let mut file = File::create(save_path).expect("Unable to create file");
+                file.write_all(&bytes).expect("Unable to write data");
+                return Ok(());
+            }
+            Err(e) => {
+                println!("Attempt {}/{} failed: {:?}", attempt, max_retries, e);
+                if attempt < max_retries {
+                    sleep(retry_delay).await;
+                } else {
+                    return Err(e);
+                }
+            }
+        }
+    }
+    Ok(())
+}
 pub async fn unzip_file(origin_path: &str, output_path: &str) {
     // 解压文件
     let zip_file = File::open(origin_path).unwrap();

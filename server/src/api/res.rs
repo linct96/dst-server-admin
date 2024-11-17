@@ -83,6 +83,13 @@ impl<T: Serialize> ResBody<T> {
             message: "success".to_string(),
         }
     }
+    pub fn err(data: T, message: String) -> Self {
+        Self {
+            code: 500,
+            data: Some(data),
+            message,
+        }
+    }
 }
 
 impl<T> IntoResponse for ResBody<T>

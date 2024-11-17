@@ -1,15 +1,16 @@
 use std::env::consts::OS;
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
 
 use crate::api::res::{Res, ResBody};
 use crate::config::config::{Config, PathConfig, CONFIG_PATH};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
-use crate::utils::file::{trans_content_to_path, unzip_file};
+use crate::utils::file::{download_file, trans_content_to_path, unzip_file};
 use crate::utils::system::SystemInfo;
 use crate::utils::{file, shell};
+
 use asset::STATIC_DIR;
 use axum::routing::{get, post};
 use axum::Router;
@@ -72,9 +73,7 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
     };
 
     let path_config = PathConfig::new();
-
     println!("path_config: {:#?}", path_config);
-
     game_info.path = path_config.dst_server_path.to_str().unwrap().to_string();
     let dst_version_path: PathBuf = path_config.dst_server_path.join("version.txt");
     if path_config.dst_server_path.exists() {
@@ -82,25 +81,23 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
             game_info.version = dst_version;
         }
     }
-    
 
     ResBody::success(game_info)
 }
 pub async fn update_dst_server_windows() -> ResBody<bool> {
     let url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
-    // 下载文件的本地路径
     let output_path = "./steamcmd.zip";
-
-    // 创建一个 HTTP 客户端
-    let client = Client::new();
-    // 下载文件
-    let response = client.get(url).send().await.unwrap();
-    let bytes = response.bytes().await.unwrap();
-    let mut out_file = File::create(output_path).unwrap();
-    out_file.write_all(&bytes).unwrap();
     let path_config = PathConfig::new();
-    println!("File downloaded to {}", output_path);
-    unzip_file(output_path,path_config.steam_cmd_path.to_str().unwrap()).await;
+    if Path::new(output_path).exists() {
+        fs::remove_file(output_path).unwrap();
+    } else {
+        let res = download_file(url, output_path).await;
+        if let Err(e) = res {
+            return ResBody::err(false, e.to_string());
+        }
+        unzip_file(output_path, path_config.steam_cmd_path.to_str().unwrap()).await;
+        
+    }
 
     ResBody::success(true)
 }

@@ -51,11 +51,12 @@ impl PathConfig {
         if OS == "macos" {
             println!("macos");
             base_dst_server_path = home_dir
-                .join("Library/Application Support/dontstarve_dedicated_server_nullrenderer.app/Contents/MacOS")
-                .join(DST_SERVER_PATH);
-
-            base_dst_save_path = home_dir.join("Documents/Klei/DoNotStarveTogether");
+                .join(resolve_path("Library/Application Support/dontstarve_dedicated_server_nullrenderer.app/Contents/MacOS"));
+            base_dst_save_path = home_dir.join(resolve_path("Documents/Klei/DoNotStarveTogether"));
             println!("{:?}", base_dst_server_path);
+        } else if OS == "windows" {
+            base_dst_server_path = base_steam_cmd_path.join(resolve_path("steamapps/common/Don't Starve Together Dedicated Server"));
+            base_dst_save_path = home_dir.join(resolve_path("Documents/Klei/DoNotStarveTogether"));
         }
         Self {
             steam_cmd_path: base_steam_cmd_path,
