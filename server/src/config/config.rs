@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::{env::consts::OS, path::PathBuf};
 
 pub struct Config {
     pub steam_cmd_path: &'static str,
@@ -12,7 +12,7 @@ const dst_server_path: &'static str =
 const dst_save_path: &'static str = ".klei/DoNotStarveTogether";
 impl Config {
     pub fn new() -> Self {
-        let is_windows = cfg!(target_os = "windows");
+        let is_windows = OS == "windows";
         Self {
             steam_cmd_path,
             dst_server_path,
@@ -21,10 +21,40 @@ impl Config {
     }
 }
 
-
-
 pub const CONFIG_PATH: Config = Config {
     steam_cmd_path: "steamCMD",
     dst_server_path: "Steam/steamapps/common/Don't Starve Together Dedicated Server",
     dst_save_path: ".klei/DoNotStarveTogether",
 };
+
+const STEAM_CMD_PATH: &'static str = "steamCMD";
+const DST_SERVER_PATH: &'static str =
+    "Steam/steamapps/common/Don't Starve Together Dedicated Server";
+const DST_SAVE_PATH: &'static str = "Steam/steamapps/common/Don't Starve Together Dedicated Server";
+
+pub struct PathConfig {
+    pub steam_cmd_path: PathBuf,
+    pub dst_server_path: PathBuf,
+    pub dst_save_path: PathBuf,
+}
+impl PathConfig {
+    pub fn new() -> Self {
+        let home_dir = dirs::home_dir().unwrap();
+        let base_steam_cmd_path = home_dir.join(STEAM_CMD_PATH);
+        let mut base_dst_server_path = home_dir.join(DST_SERVER_PATH);
+        let base_dst_save_path = home_dir.join(DST_SAVE_PATH);
+
+        if OS == "macos" {
+            println!("macos");
+            base_dst_server_path = home_dir
+                .join("Library/Application Support")
+                .join(DST_SERVER_PATH);
+            println!("{:?}", base_dst_server_path);
+        }
+        Self {
+            steam_cmd_path: base_steam_cmd_path,
+            dst_server_path: base_dst_server_path,
+            dst_save_path: base_dst_save_path,
+        }
+    }
+}

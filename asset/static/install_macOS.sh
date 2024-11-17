@@ -6,7 +6,7 @@ HomePath="${HOME}"
 # steamCMD根目录
 SteamCMDPath="${HomePath}/steamCMD"
 # 饥荒服务端根目录
-DSTServerPath="${HomePath}/Steam/steamapps/common/Don't Starve Together Dedicated Server"
+DSTServerPath="${HomePath}/Library/Application Support/Steam/steamapps/common/Don't Starve Together Dedicated Server"
 
 error(){
   echo -e "\033[0;31m【错误】\033[0m$1"
@@ -45,7 +45,7 @@ function install_steamCMD(){
   log "开始安装 steamCMD"
   mkdir -p ${SteamCMDPath}
   cd ${SteamCMDPath}
-  curl -sqkL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz | tar zxf - -C ${SteamCMDPath}
+  curl -sqkL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz" | tar zxf - -C ${SteamCMDPath}
   success "steamCMD 安装成功"
 }
 
@@ -54,7 +54,7 @@ function update_dst_server(){
     log "开始获取最新版本游戏文件"
     cd ${SteamCMDPath}
     chmod +x ./steamcmd.sh
-    ./steamcmd.sh +force_install_dir ${HomePath}/dst +login anonymous +app_update 343050 validate +quit
+    ./steamcmd.sh +login anonymous +app_update 343050 validate +quit
     success "最新版本游戏文件安装成功"
   else
     error "steamCMD 未安装"

@@ -48,7 +48,24 @@ function Home() {
       // body: JSON.stringify({})
     })
     const data = await res.json()
+    // console.log(data)
+  }
+
+  const handleUpdateGame = async () => {
+    const res = await fetch(`${SERVER_URL}/api/auth/system/update_dst_server`, {
+      method: 'POST',
+      body: JSON.stringify({})
+    })
+    const data = await res.json()
     console.log(data)
+  }
+  const handleRefreshDstServer = async () => {
+    const res = await fetch(`${SERVER_URL}/api/auth/system/get_game_info`, {
+      method: 'GET'
+      // body: JSON.stringify({})
+    })
+    const json = await res.json()
+    console.log(json.data)
   }
   useEffect(() => {
     init()
@@ -99,6 +116,38 @@ function Home() {
         <div style={{ flex: 1 }}>
           <Card
             bordered={false}
+            title="饥荒服务器信息"
+            extra={
+              <Space>
+                <Button onClick={handleRefreshDstServer}>刷新</Button>
+              </Space>
+            }
+          >
+            <Descriptions
+              size="small"
+              column={1}
+              items={[
+                {
+                  key: '1',
+                  label: '游戏版本',
+                  children: (
+                    <Space>
+                      <span>1.16.5</span>
+                      <a onClick={handleUpdateGame}>更新游戏</a>
+                    </Space>
+                  )
+                },
+                {
+                  key: '2',
+                  label: '模式',
+                  children: '无尽模式'
+                }
+              ]}
+              style={{ width: '320px' }}
+            />
+          </Card>
+          <Card
+            bordered={false}
             title="当前世界"
             extra={
               <Space>
@@ -106,6 +155,7 @@ function Home() {
                 <Button danger>停止</Button>
               </Space>
             }
+            style={{ marginTop: '16px' }}
           >
             <Descriptions
               size="small"
@@ -132,11 +182,8 @@ function Home() {
                   children: '2/9'
                 }
               ]}
-              style={{ width: '200px' }}
+              style={{ width: '320px' }}
             />
-          </Card>
-          <Card bordered={false} title="存档信息" style={{ marginTop: '16px' }}>
-            2
           </Card>
         </div>
         <div style={{ flex: 2 }}>

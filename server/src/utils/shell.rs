@@ -1,5 +1,14 @@
-use std::{io::{BufRead, BufReader}, process::{Command, Stdio}};
+use std::{
+    env::consts::OS, io::{BufRead, BufReader}, process::{Command, Stdio}
+};
 
+pub fn run_command(content: &str) {
+    if OS == "windows" {
+        run_cmd_command(content);
+    } else {
+        run_bash_command(content);
+    }
+}
 pub fn run_bash_command(content: &str) {
     let mut child_process = Command::new("bash")
         .stderr(Stdio::piped())
@@ -32,7 +41,6 @@ pub fn run_bash_command(content: &str) {
     stderr_handle.join().expect("Failed to join stderr thread");
 
     println!("Script exited with status: {:?}", status);
-
 }
 
 pub fn run_cmd_command(bat_file_path: &str) {

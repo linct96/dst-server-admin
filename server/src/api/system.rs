@@ -1,12 +1,14 @@
+use std::env::consts::OS;
 use std::path::PathBuf;
 use std::{env, fs};
 
 use crate::api::res::{Res, ResBody};
-use crate::config::config::CONFIG_PATH;
+use crate::config::config::{PathConfig, CONFIG_PATH};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
-use crate::utils::file::resolve_path;
 use crate::utils::system::SystemInfo;
-use axum::routing::get;
+use crate::utils::{file, shell};
+use asset::STATIC_DIR;
+use axum::routing::{get, post};
 use axum::Router;
 use axum::{http::HeaderMap, Json};
 use serde::Serialize;
@@ -16,7 +18,7 @@ pub fn router_system() -> Router {
     Router::new()
         .route("/get_system_info", get(get_system_info)) // 登录
         .route("/get_game_info", get(get_game_info)) // 登录
-        .route("/get_saves_info", get(get_system_info)) // 登录
+        .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
 }
 pub async fn get_system_info() -> ResBody<SystemInfo> {
     let system_info = SystemInfo::get();
@@ -36,18 +38,38 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
         version: "".to_string(),
     };
 
-    let dst_server_path = dirs::home_dir()
-        .unwrap()
-        .join(resolve_path(CONFIG_PATH.dst_server_path));
-    let dst_server_version_path = dst_server_path.join("version.txt");
-    game_info.path = dst_server_path.to_str().unwrap().to_string();
-    if dst_server_version_path.exists() {
-        if let Ok(dst_version) = fs::read_to_string(dst_server_version_path) {
+    let path_config = PathConfig::new();
+
+    game_info.path = path_config.dst_server_path.to_str().unwrap().to_string();
+    let dst_version_path = path_config.dst_server_path.join("version.txt");
+    if path_config.dst_server_path.exists() {
+        if let Ok(dst_version) = fs::read_to_string(dst_version_path) {
             game_info.version = dst_version;
         }
     }
 
     ResBody::success(game_info)
+}
+
+pub async fn update_dst_server() -> ResBody<bool> {
+    let mut sh_name = "install_linux.sh";
+
+    if OS == "macos" {
+        sh_name = "install_macOS.sh";
+    } else if OS == "windows" {
+        sh_name = "install_windows.bat";
+    }
+
+    if let Some(file) = STATIC_DIR.get_file(sh_name) {
+        // 打印文件内'
+        let file_path = file.path().to_str().unwrap();
+        println!("path: {}", file_path);
+        let content = file.contents_utf8().unwrap();
+        shell::run_command(content);
+    } else {
+        println!("File not found");
+    }
+    ResBody::success(true)
 }
 pub async fn get_system_info_v(
     header: HeaderMap,
