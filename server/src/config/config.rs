@@ -33,7 +33,7 @@ const STEAM_CMD_PATH: &'static str = "steamcmd";
 const STEAM_APP_PATH: &'static str = "Steam";
 const DST_SERVER_PATH: &'static str =
     "Steam/steamapps/common/Don't Starve Together Dedicated Server";
-const DST_SAVE_PATH: &'static str = ".klei/Don't Starve Together Dedicated Server";
+const DST_SAVE_PATH: &'static str = ".klei/DoNotStarveTogether";
 
 #[derive(Debug)]
 pub struct PathConfig {
