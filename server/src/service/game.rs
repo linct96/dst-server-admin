@@ -87,12 +87,12 @@ pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
             let conf = Ini::load_from_file(cluster_ini_path).unwrap();
             let network_section = conf.section(Some("NETWORK")).unwrap();
             let game_play_section = conf.section(Some("GAMEPLAY")).unwrap();
-            let cluster_name = network_section.get("cluster_name").unwrap();
-            let cluster_description = network_section.get("cluster_description").unwrap();
-            let cluster_password = network_section.get("cluster_password").unwrap();
-            let game_mode = game_play_section.get("game_mode").unwrap();
-            let max_players = game_play_section.get("max_players").unwrap();
-            let pvp = game_play_section.get("pvp").unwrap();
+            let cluster_name = network_section.get("cluster_name").map_or("", |p| p);
+            let cluster_description = network_section.get("cluster_description").map_or("", |p| p);
+            let cluster_password = network_section.get("cluster_password").map_or("", |p| p);
+            let game_mode = game_play_section.get("game_mode").map_or("", |p| p);
+            let max_players = game_play_section.get("max_players").map_or("", |p| p);
+            let pvp = game_play_section.get("pvp").map_or("", |p| p);
             DstSaveInfo {
                 save_name: save_name.to_string(),
                 cluster_name: cluster_name.to_string(),
