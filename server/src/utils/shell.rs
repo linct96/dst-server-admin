@@ -4,6 +4,20 @@ use std::{
     process::{Command, Stdio},
 };
 
+// pub fn run_command_with_screen(path: &str, args: Vec<String>) {
+//     let mut command = Command::new("screen");
+//     command.arg("-dmS");
+//     command.arg("dst-server");
+//     command.arg("-c");
+//     command.arg(path);
+//     for arg in args {
+//         command.arg(arg);
+//     }
+//     command.spawn().unwrap();
+//     // 返回 screen 进程的 PID
+//     let pid = command.id();
+//     println!("screen PID: {}", pid);
+// }
 pub fn run_command(path: &str, args: Vec<String>) {
     if OS == "windows" {
         run_cmd_command(path);

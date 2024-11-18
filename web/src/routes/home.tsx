@@ -17,6 +17,7 @@ import {
 } from 'antd'
 import { SERVER_URL } from '../const'
 import { useEffect } from 'react'
+import CardSaves from '../components/CardSaves'
 
 type FieldType = {
   host?: string
@@ -77,14 +78,15 @@ function Home() {
     console.log(json.data)
   }
   const handleStartDstServer = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/get_game_info`, {
-      method: 'GET'
+    const res = await fetch(`${SERVER_URL}/api/auth/system/start_dst_server`, {
+      method: 'POST'
       // body: JSON.stringify({})
     })
     const json = await res.json()
     console.log(json.data)
   }
   const handleForceInstall = async () => {
+    return
     const res = await fetch(
       `${SERVER_URL}/api/auth/system/force_install_dst_server`,
       {
@@ -94,7 +96,14 @@ function Home() {
     )
     const data = await res.json()
   }
-
+  const handleGetAllSaves = async () => {
+    const res = await fetch(`${SERVER_URL}/api/auth/system/get_all_saves`, {
+      method: 'GET'
+      // body: JSON.stringify({})
+    })
+    const data = await res.json()
+    console.log(data)
+  }
   useEffect(() => {
     init()
   }, [])
@@ -217,9 +226,7 @@ function Home() {
           </Card>
         </div>
         <div style={{ flex: 2 }}>
-          <Card bordered={false} title="服务器连接">
-            2
-          </Card>
+          <CardSaves />
           <Card
             bordered={false}
             title="服务器连接"

@@ -1,17 +1,14 @@
 use std::env::consts::OS;
-use std::io::Write;
 
-use axum::extract::path;
-use tempfile::NamedTempFile;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use tokio::fs;
 
 use crate::api::res::{Res, ResBody};
 use crate::config::config::{Config, PathConfig, CONFIG_PATH};
+use crate::service;
+use crate::service::game::DstSaveInfo;
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
-use crate::utils::file::{download_file, trans_content_to_file, unzip_file};
-use crate::utils::shell::run_command;
+use crate::utils::file::{download_file, trans_content_to_file};
 use crate::utils::system::SystemInfo;
 use crate::utils::{file, shell};
 
@@ -25,6 +22,7 @@ use serde::Serialize;
 pub fn router_system() -> Router {
     Router::new()
         .route("/force_install_dst_server", post(force_install_dst_server)) // 登录
+        .route("/get_all_saves", get(get_all_saves)) // 登录
         .route("/get_system_info", get(get_system_info)) // 登录
         .route("/get_game_info", get(get_game_info)) // 登录
         .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
@@ -42,47 +40,40 @@ pub struct GameInfo {
     pub server_installed: bool,
 }
 
-pub async fn remove_dst_server() {
-    let path_config = PathConfig::new();
-    let steam_app_path = path_config.steam_app_path.to_str().unwrap();
-    let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
-    if Path::new(steam_app_path).exists() {
-        fs::remove_dir_all(steam_app_path).await.unwrap();
+pub async fn get_all_saves() -> ResBody<Vec<DstSaveInfo>> {
+    let result = service::game::service_get_all_saves().await;
+
+    match result {
+        Ok(data) => ResBody::success(data),
+        Err(e) => ResBody::err(vec![], e.to_string()),
     }
-    if Path::new(steam_cmd_path).exists() {
-        fs::remove_dir_all(steam_cmd_path).await.unwrap();
-    }
-    if Path::new("steamcmd.zip").exists() {
-        fs::remove_file("steamcmd.zip").await.unwrap();
+}
+
+pub async fn update_dst_server() -> ResBody<bool> {
+    let result = service::game::service_update_dst_server().await;
+
+    match result {
+        Ok(_) => ResBody::success(true),
+        Err(e) => ResBody::err(false, e.to_string()),
     }
 }
 
 pub async fn force_install_dst_server() -> ResBody<bool> {
-    remove_dst_server().await;
-    println!("remove_dst_server success");
-    if OS == "windows" {
-        return update_dst_server_windows().await;
-    } else {
-        return update_dst_server_linux().await;
+    let result = service::game::service_force_install_dst_server().await;
+
+    match result {
+        Ok(_) => ResBody::success(true),
+        Err(e) => ResBody::err(false, e.to_string()),
     }
 }
 
 pub async fn start_dst_server() -> ResBody<bool> {
-    let mut sh_name = "run_cluster.sh";
+    let result = service::game::service_start_dst_server().await;
 
-    if OS == "windows" {
-        sh_name = "install_windows.bat";
+    match result {
+        Ok(_) => ResBody::success(true),
+        Err(e) => ResBody::err(false, e.to_string()),
     }
-
-    if let Some(file) = STATIC_DIR.get_file(sh_name) {
-        // 打印文件内'
-        // 构建 screen 命令
-        let callback = |path: PathBuf| shell::run_command(path.to_str().unwrap(), [sh_name.to_string()].to_vec());
-        trans_content_to_file(file.contents_utf8().unwrap(), ".sh");
-    } else {
-        println!("File not found");
-    }
-    ResBody::success(true)
 }
 
 // 获取游戏信息
@@ -105,67 +96,7 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
 
     ResBody::success(game_info)
 }
-pub async fn update_dst_server_windows() -> ResBody<bool> {
-    let url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
-    let output_path = "./steamcmd.zip";
-    let path_config = PathConfig::new();
-    if Path::new(output_path).exists() {
-        println!("exist steamcmd.zip");
-        // fs::remove_file(output_path).await.unwrap();
-    } else {
-        let res = download_file(url, output_path).await;
-        if let Err(e) = res {
-            return ResBody::err(false, e.to_string());
-        }
-    }
-    let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
-    unzip_file(output_path, steam_cmd_path).await;
 
-    let callback = |path: PathBuf| shell::run_command(path.to_str().unwrap(), [].to_vec());
-    let script = format!(
-        "{}/steamcmd.exe +login anonymous +app_update 343050 validate +quit",
-        steam_cmd_path
-    );
-    let temp_file_path = trans_content_to_file(&script, ".sh");
-    ResBody::success(true)
-}
-
-pub async fn update_dst_server_linux() -> ResBody<bool> {
-    let mut sh_name = "install.sh";
-
-    if OS == "macos" {
-        sh_name = "install.sh";
-    } else if OS == "windows" {
-        sh_name = "install_windows.bat";
-    }
-
-    let path_config = PathConfig::new();
-    let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
-    // let args = vec![];
-    let callback = |path: &str| {
-        shell::run_command(path, ["1".to_string()].to_vec())
-    };
-    // trans_content_to_file("1", ".sh", callback);
-    if let Some(file) = STATIC_DIR.get_file(sh_name) {
-        // 打印文件内'
-        let content = file.contents_utf8().unwrap();
-        let mut temp_file = NamedTempFile::new().unwrap();
-        temp_file.write_all(file.contents()).unwrap();
-        let temp_file_path = trans_content_to_file(content, ".sh").unwrap();
-        shell::run_command(temp_file.path().to_str().unwrap(), vec![steam_cmd_path.to_string()]);
-    } else {
-        println!("File not found");
-    }
-    ResBody::success(true)
-}
-
-pub async fn update_dst_server() -> ResBody<bool> {
-    if OS == "windows" {
-        return update_dst_server_windows().await;
-    } else {
-        return update_dst_server_linux().await;
-    }
-}
 pub async fn get_system_info_v(
     header: HeaderMap,
     Json(login_req): Json<UserLoginReq>,

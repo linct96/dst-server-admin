@@ -27,6 +27,34 @@ pub fn create_dir(path: &str) -> bool {
     }
 }
 
+pub fn list_dir(path: &str) -> Result<Vec<String>, io::Error> {
+    let mut result = Vec::new();
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let file_name = entry.file_name().to_str().unwrap().to_string();
+        result.push(file_name);
+    }
+    Ok(result)
+}
+
+pub fn list_dir_with_target_file(path: &str, file_name: &str) -> Result<Vec<String>, io::Error> {
+    let mut result = Vec::new();
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let entry_type = entry.file_type().unwrap();
+        let entry_path = entry.path();
+        let entry_name = entry.file_name();
+        // 过滤非文件夹类型
+        if entry_type.is_dir() {
+            if PathBuf::from(entry_path).join(file_name).exists() {
+                result.push(entry_name.to_str().unwrap().to_string());
+            }
+        }
+        
+    }
+    Ok(result)
+}
+
 pub fn resolve_path(path: &str) -> PathBuf {
     let path = if OS == "windows" {
         path.replace("/", "\\")
@@ -36,7 +64,7 @@ pub fn resolve_path(path: &str) -> PathBuf {
     PathBuf::from(path)
 }
 
-pub fn trans_content_to_file(content: &str, suffix: &str) ->io::Result<PathBuf>{
+pub fn trans_content_to_file(content: &str, suffix: &str) -> io::Result<PathBuf> {
     let mut temp_file = Builder::new()
         .suffix(suffix)
         .rand_bytes(5) // 生成随机字符串以确保文件名唯一

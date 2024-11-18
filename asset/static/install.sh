@@ -35,6 +35,15 @@ log() {
   echo -e "\033[0;34m【信息】\033[0m$1"
 }
 
+set -e
+handle_error() {
+  local exit_code=$?
+  local command=$BASH_COMMAND
+  error "Error: Command '$command' failed with exit code $exit_code" >&2
+  exit $exit_code
+}
+trap 'handle_error' ERR
+
 get_OS() {
   if [ "$(uname -s)" = "Darwin" ]; then
     OS="macos"
@@ -49,6 +58,50 @@ get_OS() {
   else
     OS=""
   fi
+}
+
+install_lib() {
+  log "开始安装依赖库"
+  if [ "$OS" == "Ubuntu" ]; then
+    sudo apt-get -y update
+    sudo apt-get -y wget
+    sudo apt-get -y install screen
+    sudo apt-get -y install htop
+
+    # 加载 32bit 库
+    sudo apt-get -y install lib32gcc1
+    sudo apt-get -y install lib32stdc++6
+    sudo apt-get -y install libcurl4-gnutls-dev:i386
+
+    # 加载 64bit库
+    sudo apt-get -y install lib64gcc1
+    sudo apt-get -y install lib64stdc++6
+    sudo apt-get -y install libcurl4-gnutls-dev
+
+  elif [ "$OS" == "Centos" ]; then
+    sudo yum -y update
+    sudo yum -y install tar wget screen
+
+    # 加载 32bit 库
+    sudo yum -y install glibc.i686 libstdc++.i686 libcurl.i686
+
+    # 加载 64bit 库
+    sudo yum -y install glibc libstdc++ libcurl
+
+    if [ -f "/usr/lib/libcurl.so.4" ]; then
+      ln -sf /usr/lib/libcurl.so.4 /usr/lib/libcurl-gnutls.so.4
+    fi
+
+    if [ -f "/usr/lib64/libcurl.so.4" ]; then
+      ln -sf /usr/lib64/libcurl.so.4 /usr/lib64/libcurl-gnutls.so.4
+    fi
+
+  elif [ "$OS" == "Arch" ]; then
+    sudo pacman -Syyy
+    sudo pacman -S --noconfirm wget screen
+    sudo pacman -S --noconfirm lib32-gcc-libs libcurl-gnutls
+  fi
+  log "依赖库安装完成"
 }
 
 install_steamCMD() {
@@ -77,6 +130,10 @@ main() {
   get_OS
   log "当前系统：${OS}"
 
+  if [ "${OS}" != "macos" ]; then
+    install_lib
+  fi
+
   if [ "${OS}" = "macos" ]; then
     steam_exec="steamcmd.sh"
   fi
@@ -92,4 +149,3 @@ main() {
 }
 
 main
-

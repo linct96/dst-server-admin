@@ -27,3 +27,4 @@ tower-http = { version = "0.6.1", features = ["trace", "cors"] }
 tempfile = "3.14.0"
 reqwest = "0.12.9"
 zip = "2.2.0"
+rust-ini = "0.21.1"

@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.7",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
     "@tanstack/react-router": "^1.43.13",
     "antd": "^5.22.1",
     "autoprefixer": "^10.4.19",
