@@ -1,15 +1,14 @@
 use std::env::consts::OS;
 use std::fs;
-use std::fs::File;
 use std::io;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use axum::body::Bytes;
 use reqwest::Error;
-use tempfile::NamedTempFile;
+use tempfile::Builder;
+
 use tokio::time::sleep;
 use zip::ZipArchive;
 
@@ -37,13 +36,17 @@ pub fn resolve_path(path: &str) -> PathBuf {
     PathBuf::from(path)
 }
 
-pub fn trans_content_to_path(content: &str) -> PathBuf {
-    let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
+pub fn trans_content_to_file(content: &str, suffix: &str) ->io::Result<PathBuf>{
+    let mut temp_file = Builder::new()
+        .suffix(suffix)
+        .rand_bytes(5) // 生成随机字符串以确保文件名唯一
+        .tempfile()
+        .unwrap();
     temp_file
         .write_all(content.as_bytes())
         .expect("Failed to write to temp file");
     let temp_file_path = temp_file.path().to_path_buf();
-    return temp_file_path;
+    Ok(temp_file_path)
 }
 
 pub async fn download_file(url: &str, save_path: &str) -> Result<(), Error> {
@@ -58,7 +61,7 @@ pub async fn download_file(url: &str, save_path: &str) -> Result<(), Error> {
                 let bytes = response.bytes().await?;
                 // 保存文件等操作
                 // 保存文件
-                let mut file = File::create(save_path).expect("Unable to create file");
+                let mut file = fs::File::create(save_path).expect("Unable to create file");
                 file.write_all(&bytes).expect("Unable to write data");
                 return Ok(());
             }
@@ -74,9 +77,10 @@ pub async fn download_file(url: &str, save_path: &str) -> Result<(), Error> {
     }
     Ok(())
 }
+
 pub async fn unzip_file(origin_path: &str, output_path: &str) {
     // 解压文件
-    let zip_file = File::open(origin_path).unwrap();
+    let zip_file = fs::File::open(origin_path).unwrap();
     let mut archive = ZipArchive::new(zip_file).unwrap();
 
     for i in 0..archive.len() {
@@ -89,7 +93,7 @@ pub async fn unzip_file(origin_path: &str, output_path: &str) {
             if let Some(p) = out_path.rsplit_once('/') {
                 fs::create_dir_all(p.0).unwrap();
             }
-            let mut out_file = File::create(&out_path).unwrap();
+            let mut out_file = fs::File::create(&out_path).unwrap();
             io::copy(&mut file, &mut out_file).unwrap();
         }
     }

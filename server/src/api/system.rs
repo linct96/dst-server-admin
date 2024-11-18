@@ -1,14 +1,16 @@
 use std::env::consts::OS;
+use std::io::Write;
 
+use axum::extract::path;
+use tempfile::NamedTempFile;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use axum::extract::path;
 use tokio::fs;
 
 use crate::api::res::{Res, ResBody};
 use crate::config::config::{Config, PathConfig, CONFIG_PATH};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
-use crate::utils::file::{download_file, trans_content_to_path, unzip_file};
+use crate::utils::file::{download_file, trans_content_to_file, unzip_file};
 use crate::utils::shell::run_command;
 use crate::utils::system::SystemInfo;
 use crate::utils::{file, shell};
@@ -17,9 +19,7 @@ use asset::STATIC_DIR;
 use axum::routing::{get, post};
 use axum::Router;
 use axum::{http::HeaderMap, Json};
-use reqwest::Client;
 use serde::Serialize;
-use std::io::{self, Write};
 // use super::res::{Res,Result};
 
 pub fn router_system() -> Router {
@@ -29,10 +29,6 @@ pub fn router_system() -> Router {
         .route("/get_game_info", get(get_game_info)) // 登录
         .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
         .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
-        .route(
-            "/update_dst_server_windows",
-            post(update_dst_server_windows),
-        ) // 启动游戏服务器
 }
 pub async fn get_system_info() -> ResBody<SystemInfo> {
     let system_info = SystemInfo::get();
@@ -48,10 +44,10 @@ pub struct GameInfo {
 
 pub async fn remove_dst_server() {
     let path_config = PathConfig::new();
-    let dst_server_path = path_config.dst_server_path.to_str().unwrap();
+    let steam_app_path = path_config.steam_app_path.to_str().unwrap();
     let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
-    if Path::new(dst_server_path).exists() {
-        fs::remove_dir_all(dst_server_path).await.unwrap();
+    if Path::new(steam_app_path).exists() {
+        fs::remove_dir_all(steam_app_path).await.unwrap();
     }
     if Path::new(steam_cmd_path).exists() {
         fs::remove_dir_all(steam_cmd_path).await.unwrap();
@@ -81,13 +77,8 @@ pub async fn start_dst_server() -> ResBody<bool> {
     if let Some(file) = STATIC_DIR.get_file(sh_name) {
         // 打印文件内'
         // 构建 screen 命令
-        let temp_file_path = trans_content_to_path(file.contents_utf8().unwrap());
-        let mut command = Command::new("screen");
-        command
-            .arg("-dmS") // 以分离模式启动一个新的 screen 会话
-            .arg("my_session_name") // 指定会话名称
-            .arg("-c") // 使用 -c 选项指定配置文件
-            .arg(temp_file_path); // 传递临时文件路径作为配置文件
+        let callback = |path: PathBuf| shell::run_command(path.to_str().unwrap(), [sh_name.to_string()].to_vec());
+        trans_content_to_file(file.contents_utf8().unwrap(), ".sh");
     } else {
         println!("File not found");
     }
@@ -103,7 +94,7 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
     };
 
     let path_config = PathConfig::new();
-    
+
     game_info.path = path_config.dst_server_path.to_str().unwrap().to_string();
     let dst_version_path: PathBuf = path_config.dst_server_path.join("version.txt");
     if path_config.dst_server_path.exists() {
@@ -130,26 +121,38 @@ pub async fn update_dst_server_windows() -> ResBody<bool> {
     let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
     unzip_file(output_path, steam_cmd_path).await;
 
-    let script = format!("{}/steamcmd.exe +login anonymous +app_update 343050 validate +quit", steam_cmd_path);
-    run_command(&script);
+    let callback = |path: PathBuf| shell::run_command(path.to_str().unwrap(), [].to_vec());
+    let script = format!(
+        "{}/steamcmd.exe +login anonymous +app_update 343050 validate +quit",
+        steam_cmd_path
+    );
+    let temp_file_path = trans_content_to_file(&script, ".sh");
     ResBody::success(true)
 }
 
 pub async fn update_dst_server_linux() -> ResBody<bool> {
-    let mut sh_name = "install_linux.sh";
+    let mut sh_name = "install.sh";
 
     if OS == "macos" {
-        sh_name = "install_macOS.sh";
+        sh_name = "install.sh";
     } else if OS == "windows" {
         sh_name = "install_windows.bat";
     }
 
+    let path_config = PathConfig::new();
+    let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
+    // let args = vec![];
+    let callback = |path: &str| {
+        shell::run_command(path, ["1".to_string()].to_vec())
+    };
+    // trans_content_to_file("1", ".sh", callback);
     if let Some(file) = STATIC_DIR.get_file(sh_name) {
         // 打印文件内'
-        let file_path = file.path().to_str().unwrap();
-        println!("path: {}", file_path);
         let content = file.contents_utf8().unwrap();
-        shell::run_command(content);
+        let mut temp_file = NamedTempFile::new().unwrap();
+        temp_file.write_all(file.contents()).unwrap();
+        let temp_file_path = trans_content_to_file(content, ".sh").unwrap();
+        shell::run_command(temp_file.path().to_str().unwrap(), vec![steam_cmd_path.to_string()]);
     } else {
         println!("File not found");
     }

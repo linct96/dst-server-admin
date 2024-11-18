@@ -4,21 +4,25 @@ use std::{
     process::{Command, Stdio},
 };
 
-pub fn run_command(content: &str) {
+pub fn run_command(path: &str, args: Vec<String>) {
     if OS == "windows" {
-        run_cmd_command(content);
+        run_cmd_command(path);
     } else {
-        run_bash_command(content);
+        run_bash_command(path, args);
     }
 }
-pub fn run_bash_command(content: &str) {
-    let mut child_process = Command::new("bash")
-        .stderr(Stdio::piped())
-        .stdout(Stdio::piped())
-        .arg("-c")
-        .arg(content)
-        .spawn()
-        .expect("Failed to execute command");
+pub fn run_bash_command(path: &str, args: Vec<String>) {
+    let mut command = Command::new("bash");
+    command.arg(path);
+    for arg in args {
+        command.arg(arg);
+    }
+
+    command.stderr(Stdio::piped())
+    .stdout(Stdio::piped());
+    
+    let mut child_process = command.spawn().unwrap();
+
     let stdout = child_process.stdout.take().unwrap();
     let stderr = child_process.stderr.take().unwrap();
 

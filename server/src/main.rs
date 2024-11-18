@@ -4,14 +4,19 @@ mod config;
 mod db;
 mod service;
 mod utils;
-use std::{env, fs, path::Path};
+use std::{
+    env, fs,
+    io::{self, Write},
+    path::{Path, PathBuf},
+};
 
 use api::res::{Res, ResBody};
 use axum::{http::HeaderMap, routing::get, Json, Router};
 
 use asset::STATIC_DIR;
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
-use utils::shell::{run_cmd_command, run_bash_command};
+use tempfile::{Builder, NamedTempFile};
+use utils::shell::{run_bash_command, run_cmd_command};
 
 async fn t_login2(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> &'static str {
     "Hello, World!"
@@ -39,8 +44,32 @@ async fn t_login3() -> Res<AuthBody> {
     }
 }
 
+pub fn create_temp_file(content: &str) -> io::Result<PathBuf> {
+    // 使用 Builder 模式创建持久化的临时文件
+    let mut temp_file = Builder::new()
+        .prefix("temp_file_")
+        .rand_bytes(5)
+        .tempfile_in("temp")?;
+
+    // 将内容写入临时文件
+    temp_file.write_all(content.as_bytes())?;
+
+    // 获取临时文件的路径并返回
+    let temp_file_path = temp_file.path().to_path_buf();
+    // let contents = fs::read_to_string(&temp_file_path).expect("Failed to read file");
+    // 打印文件内容
+    // println!("File contents:\n{}", contents);
+    Ok(temp_file_path)
+}
+
 #[tokio::main]
 async fn main() {
+    // let temp_file_path = create_temp_file("Hello, Rust!").unwrap();
+    // println!("Temp file path: {:?}", temp_file_path);
+    // 读取文件内容
+    // let contents = fs::read_to_string(&temp_file_path).expect("Failed to read file");
+    // 打印文件内容
+    // println!("File contents:\n{}", contents);
     bootstrap::init().await;
 
     println!("Hello, world123!");
