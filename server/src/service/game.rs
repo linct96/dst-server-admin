@@ -20,7 +20,6 @@ pub async fn service_force_install_dst_server() -> Result<bool> {
 }
 
 pub async fn service_update_dst_server() -> Result<bool> {
-    println!("login service");
     if OS == "windows" {
         return update_dst_server_windows().await;
     } else {
@@ -65,7 +64,7 @@ pub struct DstSaveInfo {
 }
 #[derive(Debug, Serialize, Clone)]
 pub struct DstSaveWorldInfo {
-  world_name: String,
+    world_name: String,
 }
 pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
     let path_config = PathConfig::new();
@@ -75,23 +74,25 @@ pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
     let result: Vec<DstSaveInfo> = saves
         .iter()
         .map(|save_name| {
-          let current_save_path = format!("{}/{}", saves_path, save_name);
-          let cluster_ini_path = format!("{}/cluster.ini", current_save_path);
-          let worlds: Vec<String> = file::list_dir_with_target_file(&current_save_path, "server.ini").unwrap();
-          let worlds_result:Vec<DstSaveWorldInfo> = worlds.iter().map(|world_name| {
-            DstSaveWorldInfo {
-              world_name: world_name.to_string(),
-            }
-          }).collect();
-          let conf = Ini::load_from_file(cluster_ini_path).unwrap();
-          let network_section = conf.section(Some("NETWORK")).unwrap();
-          let game_play_section = conf.section(Some("GAMEPLAY")).unwrap();
-          let cluster_name = network_section.get("cluster_name").unwrap();
-          let cluster_description = network_section.get("cluster_description").unwrap();
-          let cluster_password = network_section.get("cluster_password").unwrap();
-          let game_mode = game_play_section.get("game_mode").unwrap();
-          let max_players = game_play_section.get("max_players").unwrap();
-          let pvp = game_play_section.get("pvp").unwrap();
+            let current_save_path = format!("{}/{}", saves_path, save_name);
+            let cluster_ini_path = format!("{}/cluster.ini", current_save_path);
+            let worlds: Vec<String> =
+                file::list_dir_with_target_file(&current_save_path, "server.ini").unwrap();
+            let worlds_result: Vec<DstSaveWorldInfo> = worlds
+                .iter()
+                .map(|world_name| DstSaveWorldInfo {
+                    world_name: world_name.to_string(),
+                })
+                .collect();
+            let conf = Ini::load_from_file(cluster_ini_path).unwrap();
+            let network_section = conf.section(Some("NETWORK")).unwrap();
+            let game_play_section = conf.section(Some("GAMEPLAY")).unwrap();
+            let cluster_name = network_section.get("cluster_name").unwrap();
+            let cluster_description = network_section.get("cluster_description").unwrap();
+            let cluster_password = network_section.get("cluster_password").unwrap();
+            let game_mode = game_play_section.get("game_mode").unwrap();
+            let max_players = game_play_section.get("max_players").unwrap();
+            let pvp = game_play_section.get("pvp").unwrap();
             DstSaveInfo {
                 save_name: save_name.to_string(),
                 cluster_name: cluster_name.to_string(),
@@ -105,28 +106,31 @@ pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
         })
         .collect();
 
-    
     Ok(result)
 }
 async fn update_dst_server_windows() -> Result<bool> {
     let url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
     let output_path = "./steamcmd.zip";
     let path_config = PathConfig::new();
-    if Path::new(output_path).exists() {
-        println!("exist steamcmd.zip");
-        // fs::remove_file(output_path).await.unwrap();
-    } else {
-        file::download_file(url, output_path).await?;
-    }
     let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
-    file::unzip_file(output_path, steam_cmd_path).await;
+    let steam_exe_path = format!("{}\\steamcmd.exe", steam_cmd_path);
 
-    // let callback = |path: PathBuf| shell::run_command(path.to_str().unwrap(), [].to_vec());
-    // let script = format!(
-    //     "{}/steamcmd.exe +login anonymous +app_update 343050 validate +quit",
-    //     steam_cmd_path
-    // );
-    // let temp_file_path = trans_content_to_file(&script, ".sh");
+    if !Path::new(&steam_exe_path).exists() {
+        file::download_file(url, output_path).await?;
+        file::unzip_file(output_path, steam_cmd_path).await;
+        fs::remove_file(output_path).await.unwrap();
+    }
+
+    let script = format!(
+        "{} +login anonymous +app_update 343050 validate +quit",
+        steam_exe_path
+    );
+    println!("script: {}", script);
+    let mut temp_file = NamedTempFile::new().unwrap();
+    temp_file.write_all(script.as_bytes()).unwrap();
+    
+    shell::run_command(&script, vec![]);
+
     Ok(true)
 }
 

@@ -2,6 +2,7 @@ use std::{
     env::consts::OS,
     io::{BufRead, BufReader},
     process::{Command, Stdio},
+    thread,
 };
 
 // pub fn run_command_with_screen(path: &str, args: Vec<String>) {
@@ -32,11 +33,11 @@ pub fn run_bash_command(path: &str, args: Vec<String>) {
         command.arg(arg);
     }
 
-    command.stderr(Stdio::piped())
-    .stdout(Stdio::piped());
-    
-    let mut child_process = command.spawn().unwrap();
+    command.stderr(Stdio::piped()).stdout(Stdio::piped());
 
+    let mut child_process = command.spawn().unwrap();
+    println!("Child process id: {}", child_process.id());
+    
     let stdout = child_process.stdout.take().unwrap();
     let stderr = child_process.stderr.take().unwrap();
 
@@ -63,26 +64,41 @@ pub fn run_bash_command(path: &str, args: Vec<String>) {
     println!("Script exited with status: {:?}", status);
 }
 
-pub fn run_cmd_command(bat_file_path: &str) {
-    let output = Command::new("cmd")
-        .arg("/C")
-        .arg(bat_file_path)
-        .output()
+pub fn run_cmd_command(bat: &str) {
+    let mut child_process = Command::new("cmd")
+        .args(&["/C", bat])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .expect("Failed to execute command");
-    // 检查脚本是否成功执行
-    if output.status.success() {
-        // 打印脚本的输出
-        println!(
-            "Script output:\n{}",
-            String::from_utf8_lossy(&output.stdout)
-        );
-    } else {
-        // 打印脚本的错误输出
-        println!(
-            "Script failed with error:\n{}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
+    let id = child_process.id();
+    println!("Child process id: {}", id);
+    // 获取子进程的 stdout 和 stderr
+    let stdout = child_process.stdout.take().expect("Failed to open stdout");
+    let stderr = child_process.stderr.take().expect("Failed to open stderr");
+    // 创建线程来读取和打印 stdout
+    let stdout_thread = thread::spawn(move || {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines() {
+            println!("stdout: {}", line.expect("Failed to read line"));
+        }
+    });
+
+    // 创建线程来读取和打印 stderr
+    let stderr_thread = thread::spawn(move || {
+        let reader = BufReader::new(stderr);
+        for line in reader.lines() {
+            println!("stderr: {}", line.expect("Failed to read line"));
+        }
+    });
+
+    // 等待子进程完成
+    let status = child_process.wait().expect("Failed to wait on child");
+    println!("Batch script exited with status: {:?}", status);
+    // 等待线程完成
+    stdout_thread.join().expect("stdout thread panicked");
+    stderr_thread.join().expect("stderr thread panicked");
+    
 }
 
 pub fn run_command_test() {

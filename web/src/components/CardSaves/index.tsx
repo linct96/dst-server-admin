@@ -47,20 +47,18 @@ export default function CardSaves() {
   }, [])
 
   const expandColumns: TableColumnsType<ExpandedDataType> = [
-    { title: 'world_name', dataIndex: 'world_name' },
-    { title: 'Date', dataIndex: 'date', key: 'date' },
-    { title: 'Name', dataIndex: 'name', key: 'name' },
+    { title: '世界名称', dataIndex: 'world_name' },
+    { title: 'Date', dataIndex: 'date' },
+    { title: 'Name', dataIndex: 'name' },
     {
       title: 'Status',
       key: 'state',
       render: () => <Badge status="success" text="Finished" />
     },
-    { title: 'Upgrade Status', dataIndex: 'upgradeNum', key: 'upgradeNum' },
     {
-      title: 'Action',
-      key: 'operation',
+      title: '操作',
       render: () => (
-        <Space size="middle">
+        <Space>
           <a>启动</a>
           <a>删除</a>
         </Space>
@@ -106,6 +104,7 @@ export default function CardSaves() {
                 columns={expandColumns}
                 dataSource={record.worlds}
                 pagination={false}
+                rowKey={'world_name'}
               />
             )
           }}
@@ -113,6 +112,7 @@ export default function CardSaves() {
           pagination={false}
           size="small"
           bordered
+          rowKey={'save_name'}
         />
       </Card>
     </CardSavesWrap>
