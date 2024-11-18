@@ -33,7 +33,7 @@ const STEAM_CMD_PATH: &'static str = "steamcmd";
 const STEAM_APP_PATH: &'static str = "Steam";
 const DST_SERVER_PATH: &'static str =
     "Steam/steamapps/common/Don't Starve Together Dedicated Server";
-const DST_SAVE_PATH: &'static str = "Steam/steamapps/common/Don't Starve Together Dedicated Server";
+const DST_SAVE_PATH: &'static str = ".klei/Don't Starve Together Dedicated Server";
 
 #[derive(Debug)]
 pub struct PathConfig {
@@ -49,7 +49,7 @@ impl PathConfig {
         let base_steam_cmd_path = home_dir.join(resolve_path(STEAM_CMD_PATH));
         let mut default_steam_app_path = home_dir.join(resolve_path(STEAM_APP_PATH));
         let mut default_dst_server_path = home_dir.join(resolve_path(DST_SERVER_PATH));
-        let mut base_dst_save_path = home_dir.join(DST_SAVE_PATH);
+        let mut base_dst_save_path = home_dir.join(resolve_path(DST_SAVE_PATH));
 
         if OS == "macos" {
             default_steam_app_path = home_dir.join(resolve_path("Library/Application Support/Steam"));
