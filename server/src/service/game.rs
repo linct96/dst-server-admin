@@ -3,8 +3,9 @@ use std::{env::consts::OS, io::Write, path::Path};
 use anyhow::{Ok, Result};
 use asset::STATIC_DIR;
 
+use axum::Json;
 use ini::Ini;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tempfile::NamedTempFile;
 use tokio::fs;
 
@@ -27,7 +28,12 @@ pub async fn service_update_dst_server() -> Result<bool> {
     }
 }
 
-pub async fn service_start_dst_server() -> Result<bool> {
+#[derive(Deserialize, Debug)]
+pub struct StartServerReq {
+    cluster: String,
+    world: String,
+}
+pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
     let mut sh_name = "run_cluster.sh";
 
     if OS == "windows" {
@@ -41,19 +47,25 @@ pub async fn service_start_dst_server() -> Result<bool> {
     println!("path_config.dst_server_path: {}", dst_server_path);
     shell::run_command(
         temp_file.path().to_str().unwrap(),
-        vec![
-            dst_server_path.to_string(),
-            "cluster_1".to_string(),
-            "master".to_string(),
-        ],
+        vec![dst_server_path.to_string(), req.cluster, req.world],
     );
+
+    Ok(true)
+}
+pub async fn service_stop_dst_server(req: StartServerReq) -> Result<bool> {
+    let shell = format!(
+        "screen -S \"{}-{}\" -p 0 -X stuff \"c_shutdown(true)\\n\"",
+        req.cluster, req.world
+    );
+    println!("shell: {}", shell);
+    shell::run_command_directly(&shell);
 
     Ok(true)
 }
 
 #[derive(Debug, Serialize, Clone)]
 pub struct DstSaveInfo {
-    save_name: String,
+    cluster: String,
     cluster_name: String,
     cluster_description: String,
     cluster_password: String,
@@ -64,7 +76,7 @@ pub struct DstSaveInfo {
 }
 #[derive(Debug, Serialize, Clone)]
 pub struct DstSaveWorldInfo {
-    world_name: String,
+    world: String,
 }
 pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
     let path_config = PathConfig::new();
@@ -80,8 +92,8 @@ pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
                 file::list_dir_with_target_file(&current_save_path, "server.ini").unwrap();
             let worlds_result: Vec<DstSaveWorldInfo> = worlds
                 .iter()
-                .map(|world_name| DstSaveWorldInfo {
-                    world_name: world_name.to_string(),
+                .map(|world| DstSaveWorldInfo {
+                    world: world.to_string(),
                 })
                 .collect();
             let conf = Ini::load_from_file(cluster_ini_path).unwrap();
@@ -94,7 +106,7 @@ pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
             let max_players = game_play_section.get("max_players").map_or("", |p| p);
             let pvp = game_play_section.get("pvp").map_or("", |p| p);
             DstSaveInfo {
-                save_name: save_name.to_string(),
+                cluster: save_name.to_string(),
                 cluster_name: cluster_name.to_string(),
                 cluster_password: cluster_password.to_string(),
                 cluster_description: cluster_description.to_string(),
@@ -128,7 +140,7 @@ async fn update_dst_server_windows() -> Result<bool> {
     println!("script: {}", script);
     let mut temp_file = NamedTempFile::new().unwrap();
     temp_file.write_all(script.as_bytes()).unwrap();
-    
+
     shell::run_command(&script, vec![]);
 
     Ok(true)

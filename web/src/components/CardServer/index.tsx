@@ -26,7 +26,7 @@ export default function CardServer() {
       return json.data
     },
     {
-      pollingInterval: 1000 * 2
+      // pollingInterval: 1000 * 2
     }
   )
 
@@ -35,11 +35,7 @@ export default function CardServer() {
   // console.log('data', data)
   if (!data) return null
   console.log('data', data)
-  const conicColors: ProgressProps['strokeColor'] = {
-    '0%': '#52c41a',
-    '50%': '#ffe58f',
-    '100%': '#ff4d4f'
-  }
+
   const getStrokeColor = (percent: number) => {
     if (percent < 50) {
       return '#52c41a'
@@ -51,16 +47,22 @@ export default function CardServer() {
   }
   return (
     <CardServerWrap className="card-server-wrap">
-      <Card bordered={false} title="服务器状态" style={{ flex: 1 }}>
+      <Card
+        bordered={false}
+        title="服务器状态"
+        style={{ flex: 1 }}
+        extra={<Button onClick={refresh}>刷新</Button>}
+      >
         <Flex gap="large" justify="space-between">
           <Flex gap="middle">
             <Progress
               size={68}
               type="circle"
               percent={data.cpu_usage}
+              format={() => `${data.cpu_count}核`}
               strokeColor={getStrokeColor(data.cpu_usage)}
             />
-            <Statistic title="CPU使用" value={`核心：${data.cpu_count}`} />
+            <Statistic title="CPU使用" value={`${data.cpu_usage}%`} />
           </Flex>
 
           <Flex gap="middle">
@@ -98,7 +100,7 @@ export default function CardServer() {
             {
               key: '1',
               label: '系统版本',
-              children: 'linux'
+              children: data.os_version
             },
             {
               key: '2',

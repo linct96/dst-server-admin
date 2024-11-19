@@ -1,11 +1,8 @@
-use std::{str::FromStr, sync::Arc};
+use std::sync::Arc;
 
 use once_cell::sync::Lazy;
 use psutil::{cpu, disk, memory};
-use rust_decimal::{
-    prelude::{FromPrimitive, ToPrimitive},
-    Decimal,
-};
+
 use serde::Serialize;
 use tokio::{
     sync::Mutex,
@@ -29,7 +26,6 @@ pub static SYSTEM_INFO: Lazy<Arc<Mutex<SystemInfo>>> = Lazy::new(|| {
     let system_info = SystemInfo::default();
     Arc::new(Mutex::new(system_info))
 });
-// pub static DB: OnceCell<DatabaseConnection> = OnceCell::const_new();
 
 pub async fn update_system_info() {
     // 创建一个新的 System 实例
@@ -41,7 +37,8 @@ pub async fn update_system_info() {
         .expect("Failed to get CPU usage");
     time::sleep(Duration::from_secs(1)).await;
     let memory_info = memory::virtual_memory().unwrap();
-    system_info.os_version = sysinfo::System::long_os_version().unwrap_or_else(|| "unknown".to_owned());
+    system_info.os_version =
+        sysinfo::System::long_os_version().unwrap_or_else(|| "unknown".to_owned());
     system_info.cpu_count = cpu::cpu_count();
     system_info.cpu_usage = (cpu_collector.cpu_percent().unwrap() * 10.0).round() / 10.0;
     system_info.disk_used =

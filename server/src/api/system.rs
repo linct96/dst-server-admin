@@ -6,7 +6,7 @@ use tokio::fs;
 use crate::api::res::{Res, ResBody};
 use crate::config::config::{Config, PathConfig, CONFIG_PATH};
 use crate::service;
-use crate::service::game::DstSaveInfo;
+use crate::service::game::{DstSaveInfo, StartServerReq};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
 use crate::service::task::{SystemInfo, SYSTEM_INFO};
 use crate::utils::file::{download_file, trans_content_to_file};
@@ -27,6 +27,7 @@ pub fn router_system() -> Router {
         .route("/get_game_info", get(get_game_info)) // 登录
         .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
         .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
+        .route("/stop_dst_server", post(stop_dst_server)) // 启动游戏服务器
 }
 pub async fn get_system_info() -> ResBody<SystemInfo> {
     let system_info = SYSTEM_INFO.lock().await.clone();
@@ -68,15 +69,23 @@ pub async fn force_install_dst_server() -> ResBody<bool> {
     }
 }
 
-pub async fn start_dst_server() -> ResBody<bool> {
-    let result = service::game::service_start_dst_server().await;
+
+pub async fn start_dst_server(header: HeaderMap, Json(req): Json<StartServerReq>) -> ResBody<bool> {
+    let result = service::game::service_start_dst_server(req).await;
 
     match result {
         Ok(_) => ResBody::success(true),
         Err(e) => ResBody::err(false, e.to_string()),
     }
 }
+pub async fn stop_dst_server(header: HeaderMap, Json(req): Json<StartServerReq>) -> ResBody<bool> {
+    let result = service::game::service_stop_dst_server(req).await;
 
+    match result {
+        Ok(_) => ResBody::success(true),
+        Err(e) => ResBody::err(false, e.to_string()),
+    }
+}
 // 获取游戏信息
 pub async fn get_game_info() -> ResBody<GameInfo> {
     let mut game_info = GameInfo {

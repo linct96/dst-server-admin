@@ -7,18 +7,11 @@ type ExpandedDataType = {
   date: string
   name: string
   upgradeNum: string
-  world_name: string
+  world: string
 }
-// save_name: String,
-//     cluster_name: String,
-//     cluster_description: String,
-//     cluster_password: String,
-//     game_mode: String,
-//     max_players: String,
-//     pvp: String,
 type DataType = {
   key: React.Key
-  save_name: string
+  cluster: string
   cluster_name: string
   cluster_description: string
   cluster_password: string
@@ -42,33 +35,83 @@ export default function CardSaves() {
     console.log(json)
     setDataSource(json.data)
   }
+  const handleStartDstServer = async (data: {
+    cluster: string
+    world: string
+  }) => {
+    const res = await fetch(`${SERVER_URL}/api/auth/system/start_dst_server`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    const json = await res.json()
+    console.log(json.data)
+  }
+  const handleStopDstServer = async (data: {
+    cluster: string
+    world: string
+  }) => {
+    const res = await fetch(`${SERVER_URL}/api/auth/system/stop_dst_server`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    const json = await res.json()
+    console.log(json.data)
+  }
   useEffect(() => {
     init()
   }, [])
 
-  const expandColumns: TableColumnsType<ExpandedDataType> = [
-    { title: '世界名称', dataIndex: 'world_name' },
-    { title: 'Date', dataIndex: 'date' },
-    { title: 'Name', dataIndex: 'name' },
-    {
-      title: 'Status',
-      key: 'state',
-      render: () => <Badge status="success" text="Finished" />
-    },
-    {
-      title: '操作',
-      render: () => (
-        <Space>
-          <a>启动</a>
-          <a>删除</a>
-        </Space>
-      )
-    }
-  ]
+  const getExpandColumns: (
+    record: DataType
+  ) => TableColumnsType<ExpandedDataType> = record => {
+    return [
+      { title: '世界名称', dataIndex: 'world' },
+      { title: 'Name', dataIndex: 'name' },
+      {
+        title: 'Status',
+        key: 'state',
+        render: () => <Badge status="success" text="Finished" />
+      },
+      {
+        title: '操作',
+        render: (_, childRecord) => (
+          <Space>
+            <a
+              onClick={() =>
+                handleStartDstServer({
+                  cluster: record.cluster,
+                  world: childRecord.world
+                })
+              }
+            >
+              启动
+            </a>
+            <a
+              onClick={() =>
+                handleStopDstServer({
+                  cluster: record.cluster,
+                  world: childRecord.world
+                })
+              }
+            >
+              停止
+            </a>
+            <a>删除</a>
+          </Space>
+        )
+      }
+    ]
+  }
   const columns: TableColumnsType<DataType> = [
-    { title: '存档名称', dataIndex: 'save_name' },
-    { title: 'cluster_name', dataIndex: 'cluster_name' },
-    // { title: 'cluster_description', dataIndex: 'cluster_description' },
+    { title: '存档名称', dataIndex: 'cluster' },
+    { title: '房间名称', dataIndex: 'cluster_name' },
+    { title: '房间描述', dataIndex: 'cluster_description' },
     { title: '游戏模式', dataIndex: 'game_mode' },
     { title: '游戏密码', dataIndex: 'cluster_password' },
     {
@@ -101,10 +144,10 @@ export default function CardSaves() {
           expandable={{
             expandedRowRender: record => (
               <Table<ExpandedDataType>
-                columns={expandColumns}
+                columns={getExpandColumns(record)}
                 dataSource={record.worlds}
                 pagination={false}
-                rowKey={'world_name'}
+                rowKey={'world'}
                 bordered
               />
             )
@@ -113,7 +156,7 @@ export default function CardSaves() {
           dataSource={dataSource}
           pagination={false}
           size="small"
-          rowKey={'save_name'}
+          rowKey={'cluster'}
         />
       </Card>
     </CardSavesWrap>

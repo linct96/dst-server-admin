@@ -78,10 +78,10 @@ function Home() {
     const json = await res.json()
     console.log(json.data)
   }
-  const handleStartDstServer = async () => {
+  const handleStartDstServer = async (data: any) => {
     const res = await fetch(`${SERVER_URL}/api/auth/system/start_dst_server`, {
-      method: 'POST'
-      // body: JSON.stringify({})
+      method: 'POST',
+      body: JSON.stringify(data)
     })
     const json = await res.json()
     console.log(json.data)

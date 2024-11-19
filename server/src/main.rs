@@ -16,7 +16,7 @@ use axum::{http::HeaderMap, routing::get, Json, Router};
 use asset::STATIC_DIR;
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
 use tempfile::{Builder, NamedTempFile};
-use utils::shell::{run_bash_command, run_cmd_command};
+use utils::shell::{get_screen_task, run_bash_command, run_cmd_command};
 
 async fn t_login2(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> &'static str {
     "Hello, World!"
@@ -70,9 +70,9 @@ async fn main() {
     // let contents = fs::read_to_string(&temp_file_path).expect("Failed to read file");
     // 打印文件内容
     // println!("File contents:\n{}", contents);
-    println!("Hello, world121!");
+    println!("Hello, world12!");
+    
     bootstrap::init().await;
-
 
     // 获取 resources 目录中的 config.json 文件
     // if let Some(file) = STATIC_DIR.get_file("install_macOS2.json") {

@@ -1,9 +1,9 @@
-use crate::api::res::{ ResBody};
+use crate::api::{user,res::ResBody};
 use axum::routing::get;
 use axum::Router;
 
 pub fn router_un_auth() -> Router {
-    Router::new().route("/login", get(get_system_info)) // 登录
+    Router::new().route("/login", get(user::login)) // 登录
 }
 pub async fn get_system_info() -> ResBody<bool> {
     ResBody::success(true)
