@@ -1,9 +1,10 @@
 use rusqlite::{config, Connection, Result};
-use std::process::Command;
+use tokio::time::{Duration};
 
 use crate::{
     api,
     db::db::DB,
+    service::task::update_system_info,
     utils::file::{self, create_dir},
 };
 
@@ -41,7 +42,17 @@ async fn init_server() {
     axum::serve(listener, router).await.unwrap();
 }
 
+async fn init_periodic_task() {
+    tokio::spawn(async {
+        loop {
+            update_system_info().await;
+            tokio::time::sleep(Duration::from_secs(1)).await
+        }
+    });
+}
+
 pub async fn entry() {
+    init_periodic_task().await;
     init_config();
     init_database().expect("Failed to initialize database");
     init_server().await;

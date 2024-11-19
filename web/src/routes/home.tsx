@@ -18,6 +18,7 @@ import {
 import { SERVER_URL } from '../const'
 import { useEffect } from 'react'
 import CardSaves from '../components/CardSaves'
+import CardServer from '../components/CardServer'
 
 type FieldType = {
   host?: string
@@ -105,50 +106,12 @@ function Home() {
     console.log(data)
   }
   useEffect(() => {
-    init()
+    // init()
   }, [])
 
-  const items: DescriptionsProps['items'] = [
-    {
-      key: '1',
-      label: '系统版本',
-      children: 'linux'
-    },
-    {
-      key: '2',
-      label: '服务器地址',
-      children: '1810000000'
-    }
-  ]
   return (
     <div className="p-2">
-      <Flex gap="large">
-        <Card bordered={false} title="服务器状态" style={{ flex: 1 }}>
-          <Flex gap="large" justify="space-between">
-            <Flex gap="middle">
-              <Progress size={68} type="circle" percent={(0.2 / 4) * 100} />
-              <Statistic title="内存使用/总内存" value={`${0.2}G/${4}G`} />
-            </Flex>
-
-            <Flex gap="middle">
-              <Progress size={68} type="circle" percent={(0.2 / 4) * 100} />
-              <Statistic title="CPU使用" value={`${0.2}G/${4}G`} />
-            </Flex>
-            <Flex gap="middle">
-              <Progress size={68} type="circle" percent={(0.2 / 4) * 100} />
-              <Statistic title="磁盘使用/总磁盘" value={`${0.2}G/${4}G`} />
-            </Flex>
-          </Flex>
-        </Card>
-        <Card bordered={false} title="服务器信息">
-          <Descriptions
-            size="small"
-            column={1}
-            items={items}
-            style={{ width: '200px' }}
-          />
-        </Card>
-      </Flex>
+      <CardServer />
       <Flex gap="large" style={{ marginTop: '16px' }}>
         <div style={{ flex: 1 }}>
           <Card
