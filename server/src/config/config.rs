@@ -49,7 +49,7 @@ impl PathConfig {
         let base_steam_cmd_path = home_dir.join(resolve_path(STEAM_CMD_PATH));
         let mut default_steam_app_path = home_dir.join(resolve_path(STEAM_APP_PATH));
         let mut default_dst_server_path = home_dir.join(resolve_path(DST_SERVER_PATH));
-        let mut default_dst_server_bin_path = default_dst_server_path.join("bin64");
+        let mut default_dst_server_bin_path = default_dst_server_path.join("bin");
         let mut base_dst_save_path = home_dir.join(resolve_path(DST_SAVE_PATH));
 
         if OS == "macos" {
@@ -64,7 +64,7 @@ impl PathConfig {
             default_dst_server_path = base_steam_cmd_path.join(resolve_path(
                 "steamapps/common/Don't Starve Together Dedicated Server",
             ));
-            default_dst_server_bin_path = default_dst_server_path.join("bin64");
+            default_dst_server_bin_path = default_dst_server_path.join("bin");
             base_dst_save_path = home_dir.join(resolve_path("Documents/Klei/DoNotStarveTogether"));
         }
         Self {
