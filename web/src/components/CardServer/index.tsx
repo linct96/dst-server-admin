@@ -60,7 +60,7 @@ export default function CardServer() {
               percent={data.cpu_usage}
               strokeColor={getStrokeColor(data.cpu_usage)}
             />
-            <Statistic title="CPU使用" value={`${0.2}G/${4}G`} />
+            <Statistic title="CPU使用" value={`核心：${data.cpu_count}`} />
           </Flex>
 
           <Flex gap="middle">
