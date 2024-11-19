@@ -105,13 +105,14 @@ export default function CardSaves() {
                 dataSource={record.worlds}
                 pagination={false}
                 rowKey={'world_name'}
+                bordered
               />
             )
           }}
+          bordered={false}
           dataSource={dataSource}
           pagination={false}
           size="small"
-          bordered
           rowKey={'save_name'}
         />
       </Card>
