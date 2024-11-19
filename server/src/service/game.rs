@@ -43,11 +43,11 @@ pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
     let mut temp_file = NamedTempFile::new()?;
     temp_file.write_all(shell_file.contents())?;
     let path_config = PathConfig::new();
-    let dst_server_path = path_config.dst_server_path.to_str().unwrap();
-    println!("path_config.dst_server_path: {}", dst_server_path);
+    let dst_server_bin_path = path_config.dst_server_bin_path.to_str().unwrap();
+    println!("path_config.dst_server_bin_path: {}", dst_server_bin_path);
     shell::run_command(
         temp_file.path().to_str().unwrap(),
-        vec![dst_server_path.to_string(), req.cluster, req.world],
+        vec![dst_server_bin_path.to_string(), req.cluster, req.world],
     );
 
     Ok(true)
