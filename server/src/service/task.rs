@@ -1,15 +1,12 @@
 use std::sync::Arc;
-
 use once_cell::sync::Lazy;
-
-use rust_decimal::prelude::ToPrimitive;
 use serde::Serialize;
 use tokio::sync::Mutex;
 
 #[derive(Debug, Serialize, Clone, Default)]
 pub struct SystemInfo {
     pub os_version: String,
-    pub cpu_count: u64,
+    pub cpu_count: u8,
     pub cpu_usage: f32,
     pub memory_used: f32,
     pub memory_total: f32,
@@ -48,7 +45,7 @@ pub async fn update_system_info() {
     let cpu_usage_count: f32 = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).sum();
     system_info.os_version =
         sysinfo::System::long_os_version().unwrap_or_else(|| "unknown".to_owned());
-    system_info.cpu_count = sys.cpus().len().to_u64().unwrap();
+    system_info.cpu_count = sys.cpus().len() as u8;
     system_info.cpu_usage = (10.0 * cpu_usage_count / sys.cpus().len() as f32).round() / 10.0;
     system_info.disk_used = (10.0 * disk_used as f32 / (1024 * 1024 * 1024) as f32).round() / 10.0;
     system_info.disk_total =

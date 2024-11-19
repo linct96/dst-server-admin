@@ -26,7 +26,7 @@ export default function CardServer() {
       return json.data
     },
     {
-      // pollingInterval: 1000 * 2
+      pollingInterval: 1000 * 2
     }
   )
 
@@ -62,7 +62,10 @@ export default function CardServer() {
               format={() => `${data.cpu_count}核`}
               strokeColor={getStrokeColor(data.cpu_usage)}
             />
-            <Statistic title="CPU使用" value={`${data.cpu_usage}%`} />
+            <Statistic
+              title="CPU使用"
+              value={`${data.cpu_usage.toFixed(1)}%`}
+            />
           </Flex>
 
           <Flex gap="middle">
@@ -74,7 +77,9 @@ export default function CardServer() {
             />
             <Statistic
               title="内存使用/总内存"
-              value={`${data.memory_used}G/${data.memory_total}G`}
+              value={`${data.memory_used.toFixed(
+                1
+              )}G/${data.memory_total.toFixed(1)}G`}
             />
           </Flex>
 
@@ -87,7 +92,9 @@ export default function CardServer() {
             />
             <Statistic
               title="磁盘使用/总磁盘"
-              value={`${data.disk_used}G/${data.disk_total}G`}
+              value={`${data.disk_used.toFixed(1)}G/${data.disk_total.toFixed(
+                1
+              )}G`}
             />
           </Flex>
         </Flex>
