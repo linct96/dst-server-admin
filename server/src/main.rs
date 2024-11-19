@@ -70,9 +70,9 @@ async fn main() {
     // let contents = fs::read_to_string(&temp_file_path).expect("Failed to read file");
     // 打印文件内容
     // println!("File contents:\n{}", contents);
+    println!("Hello, world121!");
     bootstrap::init().await;
 
-    println!("Hello, world123!");
 
     // 获取 resources 目录中的 config.json 文件
     // if let Some(file) = STATIC_DIR.get_file("install_macOS2.json") {

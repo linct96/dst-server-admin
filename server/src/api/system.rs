@@ -8,8 +8,8 @@ use crate::config::config::{Config, PathConfig, CONFIG_PATH};
 use crate::service;
 use crate::service::game::DstSaveInfo;
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
+use crate::service::task::{SystemInfo, SYSTEM_INFO};
 use crate::utils::file::{download_file, trans_content_to_file};
-use crate::utils::system::SystemInfo;
 use crate::utils::{file, shell};
 
 use asset::STATIC_DIR;
@@ -29,7 +29,8 @@ pub fn router_system() -> Router {
         .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
 }
 pub async fn get_system_info() -> ResBody<SystemInfo> {
-    let system_info = SystemInfo::get();
+    let system_info = SYSTEM_INFO.lock().await.clone();
+    // let system_info = SystemInfo::get();
     ResBody::success(system_info)
 }
 
