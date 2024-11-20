@@ -27,11 +27,11 @@ get_OS() {
     OS="macos"
   elif [ -f /etc/redhat-release ]; then
     OS="centos"
-  elif cat /proc/version | grep -q -E -i "centos|red hat|redhat"; then
+  elif lsb_release -a | grep -q -E -i "centos|red hat|redhat"; then
     OS="centos"
-  elif cat /proc/version | grep -q -E -i "debian"; then
+  elif lsb_release -a | grep -q -E -i "debian"; then
     OS="debian"
-  elif cat /proc/version | grep -q -E -i "ubuntu"; then
+  elif lsb_release -a | grep -q -E -i "ubuntu"; then
     OS="ubuntu"
   else
     OS=""
@@ -49,10 +49,12 @@ run_cluster() {
   run_shared+=(./dontstarve_dedicated_server_nullrenderer)
   run_shared+=(-console_enabled)
   run_shared+=(-region sing)
-  run_shared+=(-monitor_parent_process $)
+  run_shared+=(-monitor_parent_process $$)
   # run_shared+=(-ugc_directory "/root/Steam/steamapps/common/Don't Starve Together Dedicated Server/ugc_mods")
   run_shared+=(-cluster "$cluster")
   run_shared+=(-shard "$world")
+  printf '%q ' "${run_shared[@]}"
+  echo  # 打印换行符
   "${run_shared[@]}"
   log "$cluster-$world 启动成功"
 }

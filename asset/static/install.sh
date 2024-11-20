@@ -49,11 +49,11 @@ get_OS() {
     OS="macos"
   elif [ -f /etc/redhat-release ]; then
     OS="centos"
-  elif cat /proc/version | grep -q -E -i "centos|red hat|redhat"; then
+  elif lsb_release -a | grep -q -E -i "centos|red hat|redhat"; then
     OS="centos"
-  elif cat /proc/version | grep -q -E -i "debian"; then
+  elif lsb_release -a | grep -q -E -i "debian"; then
     OS="debian"
-  elif cat /proc/version | grep -q -E -i "ubuntu"; then
+  elif lsb_release -a | grep -q -E -i "ubuntu"; then
     OS="ubuntu"
   else
     OS=""
@@ -63,22 +63,24 @@ get_OS() {
 install_lib() {
   log "开始安装依赖库"
   if [ "$OS" == "ubuntu" ]; then
-    dpkg --add-architecture i386
+    sudo dpkg --add-architecture i386
     sudo apt-get -y update
+    sudo apt-get -y dist-upgrade
     sudo apt-get -y install wget
     sudo apt-get -y install screen
     sudo apt-get -y install htop
+    sudo apt-get -y install libstdc++6
+    sudo apt-get -y install libstdc++6:i386
     sudo apt-get -y install glibc || true
 
-
     # 加载 32bit 库
-    sudo apt-get -y install lib32gcc1 || true
     sudo apt-get -y install lib32stdc++6
     sudo apt-get -y install libcurl4-gnutls-dev:i386
     sudo apt-get -y install lib32gcc-s1
+    sudo apt-get -y install lib32gcc1 || true
 
     # 加载 64bit库
-    sudo apt-get -y install lib64gcc-s1:i386
+    sudo apt-get -y install lib64gcc-s1:i386 || true
     sudo apt-get -y install lib64gcc1 || true
     sudo apt-get -y install lib64stdc++6 || true
     sudo apt-get -y install libcurl4-gnutls-dev || true
