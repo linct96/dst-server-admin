@@ -46,17 +46,17 @@ async fn init_periodic_task() {
     tokio::spawn(async {
         let mut sys = sysinfo::System::new_all();
         let disks = sysinfo::Disks::new_with_refreshed_list();
+
         loop {
             sys.refresh_all();
             tokio::time::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL).await;
-
             let mut system_info = SYSTEM_INFO.lock().await;
 
             let mut disk_total: u64 = 0; // 用于累加总大小
             let mut disk_used: u64 = 0; // 用于累加已使用大小
             disks.iter().for_each(|disk| {
                 disk_total += disk.total_space();
-                disk_used += disk.available_space();
+                disk_used += disk.total_space() - disk.available_space();
             });
             let cpu_usage_count: f32 = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).sum();
             system_info.os_version =
