@@ -54,7 +54,8 @@ pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
 }
 pub async fn service_stop_dst_server(req: StartServerReq) -> Result<bool> {
     let shell = format!(
-        "screen -S \"{}-{}\" -p 0 -X stuff \"c_shutdown(true)\\n\"",
+        // "screen -S \"{}-{}\" -p 0 -X stuff \"c_shutdown(true)\\n\"",
+        "screen -S \"{}-{}\" -p 0 -X stuff $'\\003'",
         req.cluster, req.world
     );
     println!("shell: {}", shell);

@@ -26,7 +26,7 @@ export default function CardServer() {
       return json.data
     },
     {
-      pollingInterval: 1000 * 2
+      // pollingInterval: 1000 * 2
     }
   )
 
