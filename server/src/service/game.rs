@@ -83,7 +83,7 @@ pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
     let path_config = PathConfig::new();
 
     let saves_path = path_config.dst_save_path.to_str().unwrap();
-    let saves = file::list_dir_with_target_file(saves_path, "cluster.ini")?;
+    let saves = file::list_dir_with_target_file(saves_path, "cluster.ini").unwrap_or_else(|_| vec![]);
     let result: Vec<DstSaveInfo> = saves
         .iter()
         .map(|save_name| {
@@ -127,7 +127,7 @@ async fn update_dst_server_windows() -> Result<bool> {
     let path_config = PathConfig::new();
     let steam_cmd_path = path_config.steam_cmd_path.to_str().unwrap();
     let steam_exe_path = format!("{}\\steamcmd.exe", steam_cmd_path);
-
+    
     if !Path::new(&steam_exe_path).exists() {
         file::download_file(url, output_path).await?;
         file::unzip_file(output_path, steam_cmd_path).await;
