@@ -62,23 +62,28 @@ get_OS() {
 
 install_lib() {
   log "开始安装依赖库"
-  if [ "$OS" == "Ubuntu" ]; then
+  if [ "$OS" == "ubuntu" ]; then
+    dpkg --add-architecture i386
     sudo apt-get -y update
-    sudo apt-get -y wget
+    sudo apt-get -y install wget
     sudo apt-get -y install screen
     sudo apt-get -y install htop
+    sudo apt-get -y install glibc || true
+
 
     # 加载 32bit 库
-    sudo apt-get -y install lib32gcc1
+    sudo apt-get -y install lib32gcc1 || true
     sudo apt-get -y install lib32stdc++6
     sudo apt-get -y install libcurl4-gnutls-dev:i386
+    sudo apt-get -y install lib32gcc-s1
 
     # 加载 64bit库
-    sudo apt-get -y install lib64gcc1
-    sudo apt-get -y install lib64stdc++6
-    sudo apt-get -y install libcurl4-gnutls-dev
+    sudo apt-get -y install lib64gcc-s1:i386
+    sudo apt-get -y install lib64gcc1 || true
+    sudo apt-get -y install lib64stdc++6 || true
+    sudo apt-get -y install libcurl4-gnutls-dev || true
 
-  elif [ "$OS" == "Centos" ]; then
+  elif [ "$OS" == "centos" ]; then
     sudo yum -y update
     sudo yum -y install tar wget screen
 
@@ -121,8 +126,8 @@ install_steamCMD() {
 update_dst_server() {
   log "开始获取最新版本游戏文件"
   cd ${steam_cmd_path}
-  chmod +x ${steam_exec}
-  ./${steam_exec} +login anonymous +app_update 343050 validate +quit
+  chmod +x ./steamcmd.sh
+  ./steamcmd.sh +login anonymous +app_update 343050 validate +quit
   success "最新版本游戏文件安装成功"
 }
 
