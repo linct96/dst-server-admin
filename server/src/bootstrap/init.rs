@@ -1,5 +1,5 @@
 use rusqlite::{config, Connection, Result};
-use tokio::time::Duration;
+use tokio::time::{interval, Duration};
 
 use crate::{
     api,
@@ -46,6 +46,7 @@ async fn init_periodic_task() {
     tokio::spawn(async {
         let mut sys = sysinfo::System::new_all();
         let disks = sysinfo::Disks::new_with_refreshed_list();
+        let mut interval = interval(Duration::from_secs(1)); // 每 1 秒执行一次
 
         loop {
             sys.refresh_all();
@@ -76,7 +77,7 @@ async fn init_periodic_task() {
                 (sys.used_memory() as f32 / (1024 * 1024 * 1024) as f32 * 10.0).round() / 10.0;
             system_info.memory_usage =
                 (system_info.memory_used / system_info.memory_total * 1000.0).round() / 10.0;
-            tokio::time::sleep(Duration::from_secs(1)).await;
+            interval.tick().await;
             // update_system_info(sys, disks).await;
         }
     });
