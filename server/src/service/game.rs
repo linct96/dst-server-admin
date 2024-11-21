@@ -40,17 +40,17 @@ pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
     let mut shell = String::from("");
     shell += &format!("cd \"{}\"", dst_server_bin_path.to_string());
     shell += &format!(" && screen -dmS {}-{}", req.cluster, req.world);
-    shell += &format!(" ./dontstarve_dedicated_server_nullrenderer -console_enabled -region sing -monitor_parent_process $");
+    shell += &format!(" ./dontstarve_dedicated_server_nullrenderer -console");
     shell += &format!(" -cluster {} -shard {}", req.cluster, req.world);
-    shell += &format!(" -ugc_directory {}", dst_ugc_mods_path.to_string());
+    shell += &format!(" -ugc_directory \"{}\"", dst_ugc_mods_path.to_string());
     println!("shell: {}", shell);
     shell::run_bash_command_directly(&shell);
     Ok(true)
 }
 pub async fn service_stop_dst_server(req: StartServerReq) -> Result<bool> {
     let shell = format!(
-        // "screen -S \"{}-{}\" -p 0 -X stuff \"c_shutdown(true)\\n\"",
-        "screen -S \"{}-{}\" -p 0 -X stuff $'\\003'",
+        "screen -S \"{}-{}\" -p 0 -X stuff \"c_shutdown(true)\\n\"",
+        // "screen -S \"{}-{}\" -p 0 -X stuff $'\\003'",
         req.cluster, req.world
     );
     println!("shell: {}", shell);
