@@ -34,31 +34,17 @@ pub struct StartServerReq {
     world: String,
 }
 pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
-    let mut sh_name = "run_cluster.sh";
-
-    if OS == "windows" {
-        sh_name = "install_windows.bat";
-    }
-
-    let shell_file = STATIC_DIR.get_file(sh_name).unwrap();
-    let mut temp_file = NamedTempFile::new()?;
-    temp_file.write_all(shell_file.contents())?;
     let path_config = PathConfig::new();
     let dst_server_bin_path = path_config.dst_server_bin_path.to_str().unwrap();
+    let dst_ugc_mods_path = path_config.dst_ugc_mods_path.to_str().unwrap();
     let mut shell = String::from("");
     shell += &format!("cd \"{}\"", dst_server_bin_path.to_string());
     shell += &format!(" && screen -dmS {}-{}", req.cluster, req.world);
-    shell += &format!(" ./dontstarve_dedicated_server_nullrenderer -console_enabled -region sing -monitor_parent_process $$");
+    shell += &format!(" ./dontstarve_dedicated_server_nullrenderer -console_enabled -region sing -monitor_parent_process $");
     shell += &format!(" -cluster {} -shard {}", req.cluster, req.world);
+    shell += &format!(" -ugc_directory {}", dst_ugc_mods_path.to_string());
     println!("shell: {}", shell);
     shell::run_bash_command_directly(&shell);
-
-    // println!("path_config.dst_server_bin_path: {}", dst_server_bin_path);
-    // shell::run_command(
-    //     temp_file.path().to_str().unwrap(),
-    //     vec![dst_server_bin_path.to_string(), req.cluster, req.world],
-    // );
-
     Ok(true)
 }
 pub async fn service_stop_dst_server(req: StartServerReq) -> Result<bool> {
