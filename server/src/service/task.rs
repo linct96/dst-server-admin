@@ -1,10 +1,41 @@
-use std::sync::Arc;
 use once_cell::sync::Lazy;
 use serde::Serialize;
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 #[derive(Debug, Serialize, Clone, Default)]
+pub enum ConstantOS {
+    MACOS,
+    WINDOWS,
+    UBUNTU,
+    DEBIAN,
+    #[default]
+    UNKNOWN,
+}
+impl ConstantOS {
+    fn as_str(&self) -> &'static str {
+        match self {
+            ConstantOS::MACOS => "MACOS",
+            ConstantOS::WINDOWS => "WINDOWS",
+            ConstantOS::UBUNTU => "UBUNTU",
+            ConstantOS::DEBIAN => "DEBIAN",
+            ConstantOS::UNKNOWN => "UNKNOWN",
+        }
+    }
+}
+#[derive(Debug, Serialize, Clone, Default)]
+pub struct TaskShell {
+    pub status: String,
+    pub message: u8,
+}
+pub static TASK_SHELL: Lazy<Arc<Mutex<TaskShell>>> = Lazy::new(|| {
+    let task_shell = TaskShell::default();
+    Arc::new(Mutex::new(task_shell))
+});
+
+#[derive(Debug, Serialize, Clone, Default)]
 pub struct SystemInfo {
+    pub os: ConstantOS,
     pub os_version: String,
     pub cpu_count: u8,
     pub cpu_usage: f32,
@@ -17,7 +48,18 @@ pub struct SystemInfo {
 }
 
 pub static SYSTEM_INFO: Lazy<Arc<Mutex<SystemInfo>>> = Lazy::new(|| {
-    let system_info = SystemInfo::default();
+    let mut system_info = SystemInfo::default();
+    system_info.os_version =
+        sysinfo::System::long_os_version().unwrap_or_else(|| "unknown".to_owned());
+    let contains_ignore_case =
+        |haystack: &str, needle: &str| haystack.to_lowercase().contains(&needle.to_lowercase());
+    if contains_ignore_case(&system_info.os_version, "macos") {
+        system_info.os = ConstantOS::MACOS;
+    } else if contains_ignore_case(&system_info.os_version, "windows") {
+        system_info.os = ConstantOS::WINDOWS;
+    } else if contains_ignore_case(&system_info.os_version, "ubuntu") {
+        system_info.os = ConstantOS::UBUNTU;
+    }
     Arc::new(Mutex::new(system_info))
 });
 
@@ -45,6 +87,7 @@ pub async fn update_system_info() {
     let cpu_usage_count: f32 = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).sum();
     system_info.os_version =
         sysinfo::System::long_os_version().unwrap_or_else(|| "unknown".to_owned());
+
     system_info.cpu_count = sys.cpus().len() as u8;
     system_info.cpu_usage = (10.0 * cpu_usage_count / sys.cpus().len() as f32).round() / 10.0;
     system_info.disk_used = (10.0 * disk_used as f32 / (1024 * 1024 * 1024) as f32).round() / 10.0;

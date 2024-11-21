@@ -37,7 +37,7 @@ const DST_SAVE_PATH: &'static str = ".klei/DoNotStarveTogether";
 const DST_SAVE_PATH_WINDOWS: &'static str = "Documents/Klei/DoNotStarveTogether";
 const DST_SAVE_PATH_MAC: &'static str = "Documents/Klei/DoNotStarveTogether";
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PathConfig {
     pub steam_cmd_path: PathBuf,
     pub steam_app_path: PathBuf,

@@ -126,7 +126,7 @@ async fn update_dst_server_windows() -> Result<bool> {
 
     if !Path::new(&steam_exe_path).exists() {
         file::download_file(url, output_path).await?;
-        file::unzip_file(output_path, steam_cmd_path).await;
+        file::unzip_file(output_path, steam_cmd_path).expect("Failed to unzip file");
         fs::remove_file(output_path).await.unwrap();
     }
 

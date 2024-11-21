@@ -1,3 +1,5 @@
+use reqwest::header::CONTENT_DISPOSITION;
+use reqwest::Error;
 use std::env::consts::OS;
 use std::fs;
 use std::io;
@@ -5,10 +7,7 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
-
-use reqwest::Error;
 use tempfile::Builder;
-
 use tokio::time::sleep;
 use zip::ZipArchive;
 
@@ -50,7 +49,6 @@ pub fn list_dir_with_target_file(path: &str, file_name: &str) -> Result<Vec<Stri
                 result.push(entry_name.to_str().unwrap().to_string());
             }
         }
-        
     }
     Ok(result)
 }
@@ -77,7 +75,7 @@ pub fn trans_content_to_file(content: &str, suffix: &str) -> io::Result<PathBuf>
     Ok(temp_file_path)
 }
 
-pub async fn download_file(url: &str, save_path: &str) -> Result<(), Error> {
+pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String> {
     let client = reqwest::Client::new();
     let max_retries = 3;
     let retry_delay = Duration::from_secs(2);
@@ -85,31 +83,64 @@ pub async fn download_file(url: &str, save_path: &str) -> Result<(), Error> {
     for attempt in 1..=max_retries {
         match client.get(url).send().await {
             Ok(response) => {
-                // 处理响应
-                let bytes = response.bytes().await?;
-                // 保存文件等操作
-                // 保存文件
-                let mut file = fs::File::create(save_path).expect("Unable to create file");
+                let content_disposition = response.headers().get(CONTENT_DISPOSITION).cloned();
+                let filename = match content_disposition {
+                    Some(value) => {
+                        let value = value.to_str().unwrap().to_string();
+                        let start = value.find("filename=").map(|i| i + 9).unwrap_or(0);
+                        let end = value[start..]
+                            .find('"')
+                            .map(|i| start + i)
+                            .unwrap_or(value.len());
+                        value[start..end].to_string()
+                    }
+                    None => Path::new(url)
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .unwrap_or("downloaded_file")
+                        .to_string(),
+                };
+                println!("Filename: {}", filename);
+                let bytes = response.bytes().await.expect("Unable to read response");
+                tokio::fs::create_dir_all(save_path).await.unwrap();
+                let mut file = fs::File::create(format!("{}/{}", save_path, filename))
+                    .expect("Unable to create file");
                 file.write_all(&bytes).expect("Unable to write data");
-                return Ok(());
+                return Ok(filename);
             }
             Err(e) => {
-                println!("Attempt {}/{} failed: {:?}", attempt, max_retries, e);
                 if attempt < max_retries {
                     sleep(retry_delay).await;
-                } else {
-                    return Err(e);
+                }else{
+                    return Err(anyhow::anyhow!(e));
                 }
             }
         }
     }
-    Ok(())
+    Err(anyhow::anyhow!("Failed to download file"))
 }
 
-pub async fn unzip_file(origin_path: &str, output_path: &str) {
+
+async fn unzip_tar_gz(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
+    let tar_gz_file = tokio::fs::File::open(tar_gz_path).await?;
+    let tar_decoder = GzDecoder::new(tar_gz_file);
+    let mut archive = Archive::new(tar_decoder);
+
+    tokio::fs::create_dir_all(extract_path)?;
+
+    archive.unpack(extract_path)?;
+
+    println!("Files extracted to: {:?}", extract_path);
+
+    Ok(())
+}
+pub async fn unzip_file(origin_path: &str, output_path: &str) -> anyhow::Result<()> {
     // 解压文件
-    let zip_file = fs::File::open(origin_path).unwrap();
-    let mut archive = ZipArchive::new(zip_file).unwrap();
+    let origin_path = Path::new(origin_path);
+    let output_path = Path::new(output_path);
+
+    let zip_file = fs::File::open(origin_path).expect("Failed to open zip file");
+    let mut archive = ZipArchive::new(zip_file).expect("Failed to open zip archive");
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
@@ -125,4 +156,5 @@ pub async fn unzip_file(origin_path: &str, output_path: &str) {
             io::copy(&mut file, &mut out_file).unwrap();
         }
     }
+    Ok(())
 }

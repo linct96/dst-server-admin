@@ -4,7 +4,7 @@ use tokio::time::{interval, Duration};
 use crate::{
     api,
     db::db::DB,
-    service::task::{update_system_info, SYSTEM_INFO},
+    service::task::{SYSTEM_INFO},
     utils::file::{self, create_dir},
 };
 

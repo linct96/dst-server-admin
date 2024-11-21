@@ -28,6 +28,15 @@ pub fn router_system() -> Router {
         .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
         .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
         .route("/stop_dst_server", post(stop_dst_server)) // 启动游戏服务器
+        .route("/test_fn", get(test_fn)) // 启动游戏服务器
+}
+
+pub async fn test_fn() -> ResBody<bool> {
+    let result = shell::install_steam_cmd(true).await;
+    match result {
+        Ok(_) => ResBody::success(true),
+        Err(e) => ResBody::err(false, e.to_string()),
+    }
 }
 pub async fn get_system_info() -> ResBody<SystemInfo> {
     let system_info = SYSTEM_INFO.lock().await.clone();

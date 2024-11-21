@@ -1,26 +1,90 @@
+use colored::Colorize;
+use regex::Regex;
 use std::{
+    default,
     env::consts::OS,
+    fs,
     io::{BufRead, BufReader},
+    path::Path,
     process::{Command, Stdio},
     thread,
 };
+use tokio::process::Command as TokioCommand;
 
-use regex::Regex;
+use crate::{config::config::PathConfig, service::task::SYSTEM_INFO};
+use crate::{service::task::ConstantOS, utils::file};
 
-// pub fn run_command_with_screen(path: &str, args: Vec<String>) {
-//     let mut command = Command::new("screen");
-//     command.arg("-dmS");
-//     command.arg("dst-server");
-//     command.arg("-c");
-//     command.arg(path);
-//     for arg in args {
-//         command.arg(arg);
-//     }
-//     command.spawn().unwrap();
-//     // 返回 screen 进程的 PID
-//     let pid = command.id();
-//     println!("screen PID: {}", pid);
-// }
+pub async fn execute_command(command: &str) -> Result<Option<u32>, std::io::Error> {
+    // 创建一个 Command 对象，指定要执行的 shell 命令
+    let mut cmd = TokioCommand::new("sh")
+        .arg("-c")
+        .arg(command)
+        .spawn()
+        .expect("Failed to execute command");
+
+    // 等待命令执行完成
+    let id: Option<u32> = cmd.id();
+    let status = cmd.wait().await.expect("Failed to wait on child");
+
+    if status.success() {
+        println!("{}", "脚本执行成功".green());
+    } else {
+        println!("{}", "脚本执行失败".red());
+    }
+    Ok(id)
+}
+pub async fn install_lib() -> Result<(), std::io::Error> {
+    let arch = std::env::consts::ARCH;
+    let system_info = SYSTEM_INFO.lock().await.clone();
+    let contains_ignore_case =
+        |haystack: &str, needle: &str| haystack.to_lowercase().contains(&needle.to_lowercase());
+    let is_arch_64 = contains_ignore_case(&arch, "64");
+    if contains_ignore_case(&system_info.os_version, "macos") {
+        execute_command("ls")
+            .await
+            .expect("Failed to execute command");
+    }
+    if contains_ignore_case(&system_info.os_version, "ubuntu") {
+        println!("ubuntu");
+        execute_command("ksss")
+            .await
+            .expect("Failed to execute command");
+    }
+    Ok(())
+}
+
+pub async fn install_steam_cmd(is_force: bool) -> Result<bool, std::io::Error> {
+    let system_info = SYSTEM_INFO.lock().await.clone();
+    let path_config = PathConfig::new();
+    let steam_cmd_path = path_config.steam_cmd_path;
+    let steam_cmd_path_str = steam_cmd_path.to_str().unwrap();
+    let download_file_path = Path::new("./download");
+    let download_file_path_str = download_file_path.to_str().unwrap();
+    let download_url = match system_info.os {
+        ConstantOS::WINDOWS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip",
+        ConstantOS::MACOS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
+        _ => "https://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
+    };
+    println!("download_url:{}", download_url);
+    println!("download_file_path_str:{}", download_file_path_str);
+    println!("steam_cmd_path_str:{}", steam_cmd_path_str);
+    if is_force {
+        if steam_cmd_path.exists() {
+            fs::remove_dir_all(&steam_cmd_path).expect("Failed to remove directory");
+        }
+        if download_file_path.exists() {
+            fs::remove_file(download_file_path).expect("Failed to remove directory");
+        }
+    }
+    if !download_file_path.exists() {
+        file::download_file(download_url, download_file_path_str).await.expect("Failed to download file");
+    }
+    println!("下载文件是否存在:{}", download_file_path.exists());
+
+    // file::unzip_file(download_file_path_str, steam_cmd_path_str).expect("Failed to unzip file");
+
+    Ok(true)
+}
 pub fn run_command_directly(content: &str) {
     if OS == "windows" {
         run_cmd_command(content);
@@ -28,6 +92,7 @@ pub fn run_command_directly(content: &str) {
         run_bash_command_directly(content);
     }
 }
+
 pub fn run_bash_command_directly(content: &str) {
     let mut child_process = Command::new("bash")
         .arg("-c")
