@@ -32,7 +32,7 @@ pub fn router_system() -> Router {
 }
 
 pub async fn test_fn() -> ResBody<bool> {
-    let result = shell::install_steam_cmd(true).await;
+    let result = shell::install_lib().await;
     match result {
         Ok(_) => ResBody::success(true),
         Err(e) => ResBody::err(false, e.to_string()),

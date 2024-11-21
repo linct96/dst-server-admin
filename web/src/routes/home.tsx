@@ -87,15 +87,11 @@ function Home() {
     console.log(json.data)
   }
   const handleForceInstall = async () => {
-    return
-    const res = await fetch(
-      `${SERVER_URL}/api/auth/system/force_install_dst_server`,
-      {
-        method: 'POST',
-        body: JSON.stringify({})
-      }
-    )
-    const data = await res.json()
+    const res = await fetch(`${SERVER_URL}/api/auth/system/test_fn`, {
+      method: 'GET'
+      // body: JSON.stringify({})
+    })
+    // const data = await res.json()
   }
   const handleGetAllSaves = async () => {
     const res = await fetch(`${SERVER_URL}/api/auth/system/get_all_saves`, {

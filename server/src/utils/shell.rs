@@ -14,7 +14,7 @@ use tokio::process::Command as TokioCommand;
 use crate::{config::config::PathConfig, service::task::SYSTEM_INFO};
 use crate::{service::task::ConstantOS, utils::file};
 
-pub async fn execute_command(command: &str) -> Result<Option<u32>, std::io::Error> {
+pub async fn execute_command(command: &str) -> anyhow::Result<Option<u32>> {
     // 创建一个 Command 对象，指定要执行的 shell 命令
     let mut cmd = TokioCommand::new("sh")
         .arg("-c")
@@ -30,10 +30,11 @@ pub async fn execute_command(command: &str) -> Result<Option<u32>, std::io::Erro
         println!("{}", "脚本执行成功".green());
     } else {
         println!("{}", "脚本执行失败".red());
+        Err(anyhow::anyhow!("脚本执行失败"))?;
     }
     Ok(id)
 }
-pub async fn install_lib() -> Result<(), std::io::Error> {
+pub async fn install_lib() -> anyhow::Result<()> {
     let arch = std::env::consts::ARCH;
     let system_info = SYSTEM_INFO.lock().await.clone();
     let contains_ignore_case =
@@ -46,14 +47,17 @@ pub async fn install_lib() -> Result<(), std::io::Error> {
     }
     if contains_ignore_case(&system_info.os_version, "ubuntu") {
         println!("ubuntu");
-        execute_command("ksss")
+        execute_command("sudo apt-get -y install lib32gcc1")
+            .await
+            .expect("Failed to execute command");
+        execute_command("sudo apt-get -y install screen")
             .await
             .expect("Failed to execute command");
     }
     Ok(())
 }
 
-pub async fn install_steam_cmd(is_force: bool) -> Result<bool, std::io::Error> {
+pub async fn install_steam_cmd() -> Result<bool, std::io::Error> {
     let system_info = SYSTEM_INFO.lock().await.clone();
     let path_config = PathConfig::new();
     let steam_cmd_path = path_config.steam_cmd_path;
@@ -63,25 +67,23 @@ pub async fn install_steam_cmd(is_force: bool) -> Result<bool, std::io::Error> {
     let download_url = match system_info.os {
         ConstantOS::WINDOWS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip",
         ConstantOS::MACOS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
-        _ => "https://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
+        _ => "http://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
     };
-    println!("download_url:{}", download_url);
-    println!("download_file_path_str:{}", download_file_path_str);
-    println!("steam_cmd_path_str:{}", steam_cmd_path_str);
-    if is_force {
-        if steam_cmd_path.exists() {
-            fs::remove_dir_all(&steam_cmd_path).expect("Failed to remove directory");
-        }
-        if download_file_path.exists() {
-            fs::remove_file(download_file_path).expect("Failed to remove directory");
-        }
-    }
-    if !download_file_path.exists() {
-        file::download_file(download_url, download_file_path_str).await.expect("Failed to download file");
-    }
-    println!("下载文件是否存在:{}", download_file_path.exists());
 
-    // file::unzip_file(download_file_path_str, steam_cmd_path_str).expect("Failed to unzip file");
+    if steam_cmd_path.exists() {
+        fs::remove_dir_all(&steam_cmd_path).expect("Failed to remove directory");
+    }
+    if download_file_path.exists() {
+        fs::remove_dir_all(download_file_path).expect("Failed to remove directory");
+    }
+    let file_name = file::download_file(download_url, download_file_path_str)
+        .await
+        .expect("Failed to download file");
+    file::unzip_file(
+        &format!("{}/{}", download_file_path_str, file_name),
+        steam_cmd_path_str,
+    )
+    .expect("Failed to unzip file");
 
     Ok(true)
 }

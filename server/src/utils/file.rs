@@ -1,3 +1,4 @@
+use ::colored::Colorize;
 use reqwest::header::CONTENT_DISPOSITION;
 use reqwest::Error;
 use std::env::consts::OS;
@@ -111,7 +112,7 @@ pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String>
             Err(e) => {
                 if attempt < max_retries {
                     sleep(retry_delay).await;
-                }else{
+                } else {
                     return Err(anyhow::anyhow!(e));
                 }
             }
@@ -120,31 +121,27 @@ pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String>
     Err(anyhow::anyhow!("Failed to download file"))
 }
 
+fn unzip_gz(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
+    let tar_gz_file = std::fs::File::open(origin_path)?;
+    let tar_decoder = flate2::read::GzDecoder::new(tar_gz_file);
+    let mut archive = tar::Archive::new(tar_decoder);
 
-async fn unzip_tar_gz(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
-    let tar_gz_file = tokio::fs::File::open(tar_gz_path).await?;
-    let tar_decoder = GzDecoder::new(tar_gz_file);
-    let mut archive = Archive::new(tar_decoder);
-
-    tokio::fs::create_dir_all(extract_path)?;
-
-    archive.unpack(extract_path)?;
-
-    println!("Files extracted to: {:?}", extract_path);
+    std::fs::create_dir_all(output_path)?;
+    archive.unpack(output_path)?;
 
     Ok(())
 }
-pub async fn unzip_file(origin_path: &str, output_path: &str) -> anyhow::Result<()> {
-    // 解压文件
-    let origin_path = Path::new(origin_path);
-    let output_path = Path::new(output_path);
 
-    let zip_file = fs::File::open(origin_path).expect("Failed to open zip file");
-    let mut archive = ZipArchive::new(zip_file).expect("Failed to open zip archive");
-
+fn unzip_zip(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
+    let zip_file = std::fs::File::open(origin_path)?;
+    let mut archive = zip::ZipArchive::new(zip_file)?;
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
-        let out_path = format!("{}/{}", output_path, file.name());
+        let out_path = format!(
+            "{}/{}",
+            output_path.to_str().unwrap().to_string(),
+            file.name()
+        );
 
         if file.is_dir() {
             fs::create_dir_all(&out_path).unwrap();
@@ -155,6 +152,20 @@ pub async fn unzip_file(origin_path: &str, output_path: &str) -> anyhow::Result<
             let mut out_file = fs::File::create(&out_path).unwrap();
             io::copy(&mut file, &mut out_file).unwrap();
         }
+    }
+    Ok(())
+}
+pub fn unzip_file(origin_path: &str, output_path: &str) -> anyhow::Result<()> {
+    
+    std::fs::create_dir_all(output_path)?;
+    let origin_path = Path::new(origin_path);
+    let output_path = Path::new(output_path);
+
+    let extension = origin_path.extension().unwrap().to_str().unwrap();
+    
+    match extension {
+        "gz" => unzip_gz(origin_path, output_path)?,
+        _ => unzip_zip(origin_path, output_path)?,
     }
     Ok(())
 }
