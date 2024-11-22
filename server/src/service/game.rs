@@ -41,23 +41,19 @@ pub struct StartServerReq {
 }
 pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
     let path_game = constant::path::PATH_GAME.lock().await.clone();
-    // let dst_server_bin_path = path_game.dst_server_bin_path;
-    // let dst_ugc_mods_path = path_game.dst_ugc_mods_path;
-    // let mut shell = String::from("");
-    // shell += &format!("cd \"{}\"", dst_server_bin_path);
-    // shell += &format!(" && screen -dmS {}-{}", req.cluster, req.world);
-    // shell += &format!(" ./dontstarve_dedicated_server_nullrenderer -console");
-    // shell += &format!(" -cluster {} -shard {}", req.cluster, req.world);
-    // shell += &format!(" -ugc_directory \"{}\"", dst_ugc_mods_path);
-    // println!("shell: {}", shell);
     let execute_command = match OS {
         "windows" => {
+            let execute = PathBuf::from(path_game.dst_server_bin_path.clone())
+                .join("dontstarve_dedicated_server_nullrenderer");
+            let execute_str = execute.to_str().unwrap();
             let mut command = String::from("");
-            command += &format!("cd \"{}\"", path_game.dst_server_bin_path);
-            command += &format!(" && start");
-            command += &format!(" ./dontstarve_dedicated_server_nullrenderer -console");
+            command += &format!("cd /D {}", path_game.dst_server_bin_path);
+            command += &format!(" && start dontstarve_dedicated_server_nullrenderer -console");
             command += &format!(" -cluster {} -shard {}", req.cluster, req.world);
-            command += &format!(" -ugc_directory \"{}\"", path_game.dst_ugc_mods_path);
+            if Path::new(&path_game.dst_ugc_mods_path).exists() {
+                command += &format!(" -ugc_directory '{}'", path_game.dst_ugc_mods_path);
+            }
+
             command
         }
         _ => {

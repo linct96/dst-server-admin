@@ -16,15 +16,25 @@ use crate::{service::task::ConstantOS, utils::file};
 
 pub async fn execute_command(command: &str) -> anyhow::Result<Option<u32>> {
     // 创建一个 Command 对象，指定要执行的 shell 命令
-    let mut cmd = TokioCommand::new("sh")
-        .arg("-c")
-        .arg(command)
-        .spawn()
-        .expect("Failed to execute command");
+    let mut child = match OS {
+        "windows" => {
+            let mut cm = TokioCommand::new("cmd");
+            cm.arg("/C").arg(command);
+            cm
+        }
+        _ => {
+            let mut cm = TokioCommand::new("sh");
+            cm.arg("-c").arg(command);
+            cm
+        }
+    }
+    .spawn()
+    .expect("Failed to execute command");
+    // let mut child = command.spawn().expect("Failed to execute command");
 
     // 等待命令执行完成
-    let id: Option<u32> = cmd.id();
-    let status = cmd.wait().await.expect("Failed to wait on child");
+    let id: Option<u32> = child.id();
+    let status = child.wait().await.expect("Failed to wait on child");
 
     if status.success() {
         println!("{}", "脚本执行成功".green());
@@ -56,8 +66,6 @@ pub async fn install_lib() -> anyhow::Result<()> {
     }
     Ok(())
 }
-
-
 
 pub fn run_command_directly(content: &str) {
     if OS == "windows" {

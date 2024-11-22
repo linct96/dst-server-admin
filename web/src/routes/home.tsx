@@ -63,10 +63,13 @@ function Home() {
   }
 
   const handleUpdateGame = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/update_dst_server`, {
-      method: 'POST',
-      body: JSON.stringify({})
-    })
+    const res = await fetch(
+      `${SERVER_URL}/api/auth/game/update_dedicated_server`,
+      {
+        method: 'POST',
+        body: JSON.stringify({})
+      }
+    )
     const data = await res.json()
     console.log(data)
   }
@@ -87,8 +90,8 @@ function Home() {
     console.log(json.data)
   }
   const handleForceInstall = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/test_fn`, {
-      method: 'GET'
+    const res = await fetch(`${SERVER_URL}/api/auth/game/install_steam_cmd`, {
+      method: 'POST'
       // body: JSON.stringify({})
     })
     // const data = await res.json()
