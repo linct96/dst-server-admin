@@ -41,16 +41,39 @@ pub struct StartServerReq {
 }
 pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
     let path_game = constant::path::PATH_GAME.lock().await.clone();
-    let dst_server_bin_path = path_game.dst_server_bin_path;
-    let dst_ugc_mods_path = path_game.dst_ugc_mods_path;
-    let mut shell = String::from("");
-    shell += &format!("cd \"{}\"", dst_server_bin_path);
-    shell += &format!(" && screen -dmS {}-{}", req.cluster, req.world);
-    shell += &format!(" ./dontstarve_dedicated_server_nullrenderer -console");
-    shell += &format!(" -cluster {} -shard {}", req.cluster, req.world);
-    shell += &format!(" -ugc_directory \"{}\"", dst_ugc_mods_path);
-    println!("shell: {}", shell);
-    shell::run_bash_command_directly(&shell);
+    // let dst_server_bin_path = path_game.dst_server_bin_path;
+    // let dst_ugc_mods_path = path_game.dst_ugc_mods_path;
+    // let mut shell = String::from("");
+    // shell += &format!("cd \"{}\"", dst_server_bin_path);
+    // shell += &format!(" && screen -dmS {}-{}", req.cluster, req.world);
+    // shell += &format!(" ./dontstarve_dedicated_server_nullrenderer -console");
+    // shell += &format!(" -cluster {} -shard {}", req.cluster, req.world);
+    // shell += &format!(" -ugc_directory \"{}\"", dst_ugc_mods_path);
+    // println!("shell: {}", shell);
+    let execute_command = match OS {
+        "windows" => {
+            let mut command = String::from("");
+            command += &format!("cd \"{}\"", path_game.dst_server_bin_path);
+            command += &format!(" && start");
+            command += &format!(" ./dontstarve_dedicated_server_nullrenderer -console");
+            command += &format!(" -cluster {} -shard {}", req.cluster, req.world);
+            command += &format!(" -ugc_directory \"{}\"", path_game.dst_ugc_mods_path);
+            command
+        }
+        _ => {
+            let execute = PathBuf::from(path_game.dst_server_bin_path.clone())
+                .join("dontstarve_dedicated_server_nullrenderer");
+            let execute_str = execute.to_str().unwrap();
+            let mut command = String::from("");
+            command += &format!("screen -dmS {}-{}", req.cluster, req.world);
+            command += &format!(" {} -console", execute_str);
+            command += &format!(" -cluster {} -shard {}", req.cluster, req.world);
+            command += &format!(" -ugc_directory {}", path_game.dst_ugc_mods_path);
+            command
+        }
+    };
+    println!("shell: {}", execute_command);
+    shell::execute_command(&execute_command).await?;
     Ok(true)
 }
 pub async fn service_stop_dst_server(req: StartServerReq) -> Result<bool> {
@@ -213,9 +236,6 @@ pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
 
 pub async fn service_update_dedicated_server() -> anyhow::Result<bool> {
     let path_game = PATH_GAME.lock().await.clone();
-    let mut shell = String::from("");
-    shell += &format!("cd \"{}\"", path_game.steam_cmd_path);
-    shell += &format!(" && chmod +x ./steamcmd.sh",);
     let execute_command = match OS {
         "windows" => {
             let execute = PathBuf::from(path_game.steam_cmd_path.clone()).join("steamcmd.exe");

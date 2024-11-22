@@ -20,10 +20,8 @@ use serde::Serialize;
 pub fn router_system() -> Router {
     Router::new()
         .route("/force_install_dst_server", post(force_install_dst_server)) // 登录
-        .route("/get_all_saves", get(get_all_saves)) // 登录
         .route("/get_system_info", get(get_system_info)) // 登录
         .route("/get_game_info", get(get_game_info)) // 登录
-        .route("/update_dst_server", post(update_dst_server)) // 安装、更新服务器
         .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
         .route("/stop_dst_server", post(stop_dst_server)) // 启动游戏服务器
         .route("/test_fn", get(test_fn)) // 启动游戏服务器
@@ -49,23 +47,8 @@ pub struct GameInfo {
     pub server_installed: bool,
 }
 
-pub async fn get_all_saves() -> ResBody<Vec<DstSaveInfo>> {
-    let result = service::game::service_get_all_saves().await;
 
-    match result {
-        Ok(data) => ResBody::success(data),
-        Err(e) => ResBody::err(vec![], e.to_string()),
-    }
-}
 
-pub async fn update_dst_server() -> ResBody<bool> {
-    let result = service::game::service_update_dst_server().await;
-
-    match result {
-        Ok(_) => ResBody::success(true),
-        Err(e) => ResBody::err(false, e.to_string()),
-    }
-}
 
 pub async fn force_install_dst_server() -> ResBody<bool> {
     let result = service::game::service_force_install_dst_server().await;
