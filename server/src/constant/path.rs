@@ -37,7 +37,7 @@ pub static PATH_GAME: Lazy<Arc<Mutex<PathGame>>> = Lazy::new(|| {
     .to_string();
 
     let dst_save_path = match OS {
-        "macos" => dirs::home_dir()
+        "linux" => dirs::home_dir()
             .unwrap()
             .join(resolve_path(".klei/DoNotStarveTogether".to_string())),
         _ => dirs::home_dir().unwrap().join(resolve_path(

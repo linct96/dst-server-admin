@@ -27,7 +27,7 @@ export default function CardSaves() {
   }
 
   const handleGetAllSaves = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/get_all_saves`, {
+    const res = await fetch(`${SERVER_URL}/api/auth/game/get_all_saves`, {
       method: 'GET'
       // body: JSON.stringify({})
     })
@@ -39,7 +39,7 @@ export default function CardSaves() {
     cluster: string
     world: string
   }) => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/start_dst_server`, {
+    const res = await fetch(`${SERVER_URL}/api/auth/game/start_dst_server`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -53,7 +53,7 @@ export default function CardSaves() {
     cluster: string
     world: string
   }) => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/stop_dst_server`, {
+    const res = await fetch(`${SERVER_URL}/api/auth/game/stop_dst_server`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

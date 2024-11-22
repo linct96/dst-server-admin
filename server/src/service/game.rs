@@ -65,10 +65,13 @@ pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
                 .join("dontstarve_dedicated_server_nullrenderer");
             let execute_str = execute.to_str().unwrap();
             let mut command = String::from("");
-            command += &format!("screen -dmS {}-{}", req.cluster, req.world);
-            command += &format!(" {} -console", execute_str);
+            command += &format!("cd \"{}\"", path_game.dst_server_bin_path);
+            command += &format!(" && screen -dmS {}-{}", req.cluster, req.world);
+            command += &format!(" ./dontstarve_dedicated_server_nullrenderer -console",);
             command += &format!(" -cluster {} -shard {}", req.cluster, req.world);
-            command += &format!(" -ugc_directory {}", path_game.dst_ugc_mods_path);
+            if Path::new(&path_game.dst_ugc_mods_path).exists() {
+                command += &format!(" -ugc_directory '{}'", path_game.dst_ugc_mods_path);
+            }
             command
         }
     };
@@ -77,14 +80,21 @@ pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
     Ok(true)
 }
 pub async fn service_stop_dst_server(req: StartServerReq) -> Result<bool> {
-    let shell = format!(
+    let execute_command = format!(
         "screen -S \"{}-{}\" -p 0 -X stuff \"c_shutdown(true)\\n\"",
         // "screen -S \"{}-{}\" -p 0 -X stuff $'\\003'",
         req.cluster,
         req.world
     );
-    println!("shell: {}", shell);
-    shell::run_command_directly(&shell);
+    let exe = format!(
+        "screen -S \"{}-{}\" -p 0 -X stuff \"c_shutdown(true)\\n\"",
+        // "screen -S \"{}-{}\" -p 0 -X stuff $'\\003'",
+        req.cluster,
+        req.world
+    );
+    println!("shell: {}", execute_command);
+    shell::execute_command(&execute_command).await?;
+    // shell::execute_command(&execute_command).await?;
 
     Ok(true)
 }
@@ -106,7 +116,7 @@ pub struct DstSaveWorldInfo {
 }
 pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
     let path_game = constant::path::PATH_GAME.lock().await.clone();
-
+    println!("path_game: {}", &path_game.dst_save_path);
     let saves = file::list_dir_with_target_file(&path_game.dst_save_path, "cluster.ini")
         .unwrap_or_else(|_| vec![]);
     let result: Vec<DstSaveInfo> = saves
