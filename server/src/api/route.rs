@@ -1,4 +1,4 @@
-use crate::api::{system, un_auth};
+use crate::api::{game, system, un_auth};
 
 use axum::{http, Router};
 use tower::ServiceBuilder;
@@ -37,10 +37,8 @@ pub fn root() -> Router {
 
 fn auth_router() -> Router {
     Router::new()
-        // 文件上传api
-        // .nest_service(&CFG.web.upload_url, get_service(ServeDir::new(&CFG.web.upload_dir)))
-        // 无需授权Api.通用模块
         .nest("/system", system::router_system())
+        .nest("/game", game::router_game())
 }
 
 fn un_auth_router() -> Router {

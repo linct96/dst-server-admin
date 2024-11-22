@@ -54,13 +54,13 @@ pub fn list_dir_with_target_file(path: &str, file_name: &str) -> Result<Vec<Stri
     Ok(result)
 }
 
-pub fn resolve_path(path: &str) -> PathBuf {
-    let path = if OS == "windows" {
+pub fn resolve_path(path: String) -> String {
+    let resolved_path = if OS == "windows" {
         path.replace("/", "\\")
     } else {
         path.replace("\\", "/")
     };
-    PathBuf::from(path)
+    resolved_path
 }
 
 pub fn trans_content_to_file(content: &str, suffix: &str) -> io::Result<PathBuf> {
@@ -101,7 +101,6 @@ pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String>
                         .unwrap_or("downloaded_file")
                         .to_string(),
                 };
-                println!("Filename: {}", filename);
                 let bytes = response.bytes().await.expect("Unable to read response");
                 tokio::fs::create_dir_all(save_path).await.unwrap();
                 let mut file = fs::File::create(format!("{}/{}", save_path, filename))
@@ -156,13 +155,12 @@ fn unzip_zip(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 pub fn unzip_file(origin_path: &str, output_path: &str) -> anyhow::Result<()> {
-    
     std::fs::create_dir_all(output_path)?;
     let origin_path = Path::new(origin_path);
     let output_path = Path::new(output_path);
 
     let extension = origin_path.extension().unwrap().to_str().unwrap();
-    
+
     match extension {
         "gz" => unzip_gz(origin_path, output_path)?,
         _ => unzip_zip(origin_path, output_path)?,

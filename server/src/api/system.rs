@@ -5,14 +5,12 @@ use tokio::fs;
 
 use crate::api::res::{Res, ResBody};
 use crate::config::config::{Config, PathConfig, CONFIG_PATH};
-use crate::service;
 use crate::service::game::{DstSaveInfo, StartServerReq};
 use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
 use crate::service::task::{SystemInfo, SYSTEM_INFO};
-use crate::utils::file::{download_file, trans_content_to_file};
-use crate::utils::{file, shell};
+use crate::utils;
+use crate::{constant, service};
 
-use asset::STATIC_DIR;
 use axum::routing::{get, post};
 use axum::Router;
 use axum::{http::HeaderMap, Json};
@@ -32,7 +30,7 @@ pub fn router_system() -> Router {
 }
 
 pub async fn test_fn() -> ResBody<bool> {
-    let result = shell::install_lib().await;
+    let result = utils::shell::install_lib().await;
     match result {
         Ok(_) => ResBody::success(true),
         Err(e) => ResBody::err(false, e.to_string()),
@@ -78,7 +76,6 @@ pub async fn force_install_dst_server() -> ResBody<bool> {
     }
 }
 
-
 pub async fn start_dst_server(header: HeaderMap, Json(req): Json<StartServerReq>) -> ResBody<bool> {
     let result = service::game::service_start_dst_server(req).await;
 
@@ -102,12 +99,11 @@ pub async fn get_game_info() -> ResBody<GameInfo> {
         version: "".to_string(),
         server_installed: false,
     };
+    let path_game = constant::path::PATH_GAME.lock().await.clone();
 
-    let path_config = PathConfig::new();
-
-    game_info.path = path_config.dst_server_path.to_str().unwrap().to_string();
-    let dst_version_path: PathBuf = path_config.dst_server_path.join("version.txt");
-    if path_config.dst_server_path.exists() {
+    game_info.path = path_game.dst_server_path.clone();
+    let dst_version_path = format!("{}/version.txt", path_game.dst_server_path.clone());
+    if Path::new(path_game.dst_server_path.clone().to_string().as_str()).exists() {
         if let Ok(dst_version) = fs::read_to_string(dst_version_path).await {
             game_info.version = dst_version.replace("\n", "").replace("\r", "");
         }

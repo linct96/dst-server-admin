@@ -57,36 +57,8 @@ pub async fn install_lib() -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn install_steam_cmd() -> Result<bool, std::io::Error> {
-    let system_info = SYSTEM_INFO.lock().await.clone();
-    let path_config = PathConfig::new();
-    let steam_cmd_path = path_config.steam_cmd_path;
-    let steam_cmd_path_str = steam_cmd_path.to_str().unwrap();
-    let download_file_path = Path::new("./download");
-    let download_file_path_str = download_file_path.to_str().unwrap();
-    let download_url = match system_info.os {
-        ConstantOS::WINDOWS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip",
-        ConstantOS::MACOS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
-        _ => "http://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
-    };
 
-    if steam_cmd_path.exists() {
-        fs::remove_dir_all(&steam_cmd_path).expect("Failed to remove directory");
-    }
-    if download_file_path.exists() {
-        fs::remove_dir_all(download_file_path).expect("Failed to remove directory");
-    }
-    let file_name = file::download_file(download_url, download_file_path_str)
-        .await
-        .expect("Failed to download file");
-    file::unzip_file(
-        &format!("{}/{}", download_file_path_str, file_name),
-        steam_cmd_path_str,
-    )
-    .expect("Failed to unzip file");
 
-    Ok(true)
-}
 pub fn run_command_directly(content: &str) {
     if OS == "windows" {
         run_cmd_command(content);

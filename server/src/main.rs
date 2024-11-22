@@ -4,6 +4,7 @@ mod config;
 mod db;
 mod service;
 mod utils;
+mod constant;
 use std::{
     env, fs,
     io::{self, Write},

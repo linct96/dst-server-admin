@@ -46,42 +46,42 @@ pub struct PathConfig {
     pub dst_ugc_mods_path: PathBuf,
     pub dst_save_path: PathBuf,
 }
-impl PathConfig {
-    pub fn new() -> Self {
-        let home_dir = dirs::home_dir().unwrap();
-        let base_steam_cmd_path = home_dir.join(resolve_path(STEAM_CMD_PATH));
-        let mut default_steam_app_path = home_dir.join(resolve_path(STEAM_APP_PATH));
-        let mut default_dst_server_path = home_dir.join(resolve_path(DST_SERVER_PATH));
-        let mut default_dst_server_bin_path = default_dst_server_path.join("bin");
-        let mut default_dst_ugc_mods_path = default_dst_server_path.join("ugc_mods");
-        let mut base_dst_save_path = home_dir.join(resolve_path(DST_SAVE_PATH));
+// impl PathConfig {
+//     pub fn new() -> Self {
+//         let home_dir = dirs::home_dir().unwrap();
+//         let base_steam_cmd_path = home_dir.join(resolve_path(STEAM_CMD_PATH));
+//         let mut default_steam_app_path = home_dir.join(resolve_path(STEAM_APP_PATH));
+//         let mut default_dst_server_path = home_dir.join(resolve_path(DST_SERVER_PATH));
+//         let mut default_dst_server_bin_path = default_dst_server_path.join("bin");
+//         let mut default_dst_ugc_mods_path = default_dst_server_path.join("ugc_mods");
+//         let mut base_dst_save_path = home_dir.join(resolve_path(DST_SAVE_PATH));
 
-        if OS == "macos" {
-            default_steam_app_path =
-                home_dir.join(resolve_path("Library/Application Support/Steam"));
-            default_dst_server_path = default_steam_app_path.join(resolve_path(
-                "steamapps/common/Don't Starve Together Dedicated Server",
-            ));
-            default_dst_ugc_mods_path = default_dst_server_path.join("ugc_mods");
-            default_dst_server_bin_path = default_dst_server_path.join(resolve_path(
-                "dontstarve_dedicated_server_nullrenderer.app/Contents/MacOS",
-            ));
-            base_dst_save_path = home_dir.join(resolve_path(DST_SAVE_PATH_MAC));
-        } else if OS == "windows" {
-            default_dst_server_path = base_steam_cmd_path.join(resolve_path(
-                "steamapps/common/Don't Starve Together Dedicated Server",
-            ));
-            default_dst_server_bin_path = default_dst_server_path.join("bin");
-            default_dst_ugc_mods_path = default_dst_server_path.join("ugc_mods");
-            base_dst_save_path = home_dir.join(resolve_path(DST_SAVE_PATH_WINDOWS));
-        }
-        Self {
-            steam_cmd_path: base_steam_cmd_path,
-            steam_app_path: default_steam_app_path,
-            dst_server_path: default_dst_server_path,
-            dst_server_bin_path: default_dst_server_bin_path,
-            dst_ugc_mods_path: default_dst_ugc_mods_path,
-            dst_save_path: base_dst_save_path,
-        }
-    }
-}
+//         if OS == "macos" {
+//             default_steam_app_path =
+//                 home_dir.join(resolve_path("Library/Application Support/Steam"));
+//             default_dst_server_path = default_steam_app_path.join(resolve_path(
+//                 "steamapps/common/Don't Starve Together Dedicated Server",
+//             ));
+//             default_dst_ugc_mods_path = default_dst_server_path.join("ugc_mods");
+//             default_dst_server_bin_path = default_dst_server_path.join(resolve_path(
+//                 "dontstarve_dedicated_server_nullrenderer.app/Contents/MacOS",
+//             ));
+//             base_dst_save_path = home_dir.join(resolve_path(DST_SAVE_PATH_MAC));
+//         } else if OS == "windows" {
+//             default_dst_server_path = base_steam_cmd_path.join(resolve_path(
+//                 "steamapps/common/Don't Starve Together Dedicated Server",
+//             ));
+//             default_dst_server_bin_path = default_dst_server_path.join("bin");
+//             default_dst_ugc_mods_path = default_dst_server_path.join("ugc_mods");
+//             base_dst_save_path = home_dir.join(resolve_path(DST_SAVE_PATH_WINDOWS));
+//         }
+//         Self {
+//             steam_cmd_path: base_steam_cmd_path,
+//             steam_app_path: default_steam_app_path,
+//             dst_server_path: default_dst_server_path,
+//             dst_server_bin_path: default_dst_server_bin_path,
+//             dst_ugc_mods_path: default_dst_ugc_mods_path,
+//             dst_save_path: base_dst_save_path,
+//         }
+//     }
+// }
