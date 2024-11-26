@@ -1,7 +1,5 @@
-use std::env::consts::OS;
 
 use std::path::{Path, PathBuf};
-use tokio::fs;
 
 use crate::api::res::{Res, ResBody};
 use crate::config::config::{Config, PathConfig, CONFIG_PATH};
@@ -21,7 +19,6 @@ pub fn router_system() -> Router {
     Router::new()
         .route("/force_install_dst_server", post(force_install_dst_server)) // 登录
         .route("/get_system_info", get(get_system_info)) // 登录
-        .route("/get_game_info", get(get_game_info)) // 登录
         .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
         .route("/stop_dst_server", post(stop_dst_server)) // 启动游戏服务器
         .route("/test_fn", get(test_fn)) // 启动游戏服务器
@@ -74,25 +71,6 @@ pub async fn stop_dst_server(header: HeaderMap, Json(req): Json<StartServerReq>)
         Ok(_) => ResBody::success(true),
         Err(e) => ResBody::err(false, e.to_string()),
     }
-}
-// 获取游戏信息
-pub async fn get_game_info() -> ResBody<GameInfo> {
-    let mut game_info = GameInfo {
-        path: "".to_string(),
-        version: "".to_string(),
-        server_installed: false,
-    };
-    let path_game = constant::path::PATH_GAME.lock().await.clone();
-
-    game_info.path = path_game.dst_server_path.clone();
-    let dst_version_path = format!("{}/version.txt", path_game.dst_server_path.clone());
-    if Path::new(path_game.dst_server_path.clone().to_string().as_str()).exists() {
-        if let Ok(dst_version) = fs::read_to_string(dst_version_path).await {
-            game_info.version = dst_version.replace("\n", "").replace("\r", "");
-        }
-    }
-
-    ResBody::success(game_info)
 }
 
 pub async fn get_system_info_v(

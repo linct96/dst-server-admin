@@ -269,3 +269,25 @@ pub async fn service_update_dedicated_server() -> anyhow::Result<bool> {
     shell::execute_command(&execute_command).await?;
     anyhow::Ok(true)
 }
+
+#[derive(Debug, Serialize, Clone, Default)]
+pub struct GameInfo {
+    pub path: String,
+    pub version: String,
+    pub server_installed: bool,
+    pub steam_cmd_installed: bool,
+}
+pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
+    let mut game_info = GameInfo::default();
+    let path_game = constant::path::PATH_GAME.lock().await.clone();
+
+    game_info.path = path_game.dst_server_path;
+    let dst_version_path = format!("{}/version.txt", &game_info.path);
+    if Path::new(&game_info.path).exists() {
+        let dst_version = fs::read_to_string(dst_version_path).await?;
+        game_info.version = dst_version.replace("\n", "").replace("\r", "");
+        
+    }
+
+    anyhow::Ok(game_info)
+}

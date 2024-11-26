@@ -24,7 +24,6 @@ async fn t_login2(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> &'s
 }
 pub async fn t_login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> Res<AuthBody> {
     let res = login_service(login_req, header).await;
-    print!("1:");
     match res {
         Ok(x) => {
             print!("login success: {}", x.exp);
