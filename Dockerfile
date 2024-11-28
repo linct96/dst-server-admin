@@ -49,11 +49,11 @@ LABEL description="dst-server-admin"
 RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list \
   && sed -i 's|security.debian.org/debian-security|mirrors.tuna.tsinghua.edu.cn/debian-security|g' /etc/apt/sources.list
 
-RUN sudo dpkg --add-architecture i386 \
-  && sudo apt-get -y update \
-  # && sudo apt-get -y dist-upgrade \
-  # && sudo apt-get -y install screen \
-  && echo 'lib install successfully'
+# RUN sudo dpkg --add-architecture i386 \
+#   && sudo apt-get -y update \
+#   # && sudo apt-get -y dist-upgrade \
+#   # && sudo apt-get -y install screen \
+#   && echo 'lib install successfully'
 
 WORKDIR /app
 # 从上一阶段镜像中拷贝编译好的程序
