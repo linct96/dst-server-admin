@@ -20,24 +20,22 @@ RUN pnpm run build:web
 # CMD ["nginx", "-g", "daemon off;"]
 FROM rust AS builder-server
 
-RUN mkdir -p ~/.cargo \
-  && echo '[source.crates-io]' > ~/.cargo/config.toml \
-  && echo 'replace-with = "rsproxy-sparse"'  >> ~/.cargo/config.toml \
-  && echo "[source.rsproxy]"  >> ~/.cargo/config.toml \
-  && echo 'registry = "https://rsproxy.cn/crates.io-index"'   >> ~/.cargo/config.toml \
-  && echo '[source.rsproxy-sparse]'   >> ~/.cargo/config.toml \
-  && echo 'registry = "sparse+https://rsproxy.cn/index/"'  >> ~/.cargo/config.toml \
-  && echo '[registries.rsproxy]'   >> ~/.cargo/config.toml \
-  && echo 'index = "https://rsproxy.cn/crates.io-index"'   >> ~/.cargo/config.toml \
-  && echo '[net]'   >> ~/.cargo/config.toml \
-  && echo 'git-fetch-with-cli = true'   >> ~/.cargo/config.toml \
-  && echo '' >> ~/.cargo/config.toml
+# RUN mkdir -p ~/.cargo \
+#   && echo '[source.crates-io]' > ~/.cargo/config.toml \
+#   && echo 'replace-with = "rsproxy-sparse"'  >> ~/.cargo/config.toml \
+#   && echo "[source.rsproxy]"  >> ~/.cargo/config.toml \
+#   && echo 'registry = "https://rsproxy.cn/crates.io-index"'   >> ~/.cargo/config.toml \
+#   && echo '[source.rsproxy-sparse]'   >> ~/.cargo/config.toml \
+#   && echo 'registry = "sparse+https://rsproxy.cn/index/"'  >> ~/.cargo/config.toml \
+#   && echo '[registries.rsproxy]'   >> ~/.cargo/config.toml \
+#   && echo 'index = "https://rsproxy.cn/crates.io-index"'   >> ~/.cargo/config.toml \
+#   && echo '[net]'   >> ~/.cargo/config.toml \
+#   && echo 'git-fetch-with-cli = true'   >> ~/.cargo/config.toml \
+#   && echo '' >> ~/.cargo/config.toml
 
 WORKDIR /app
 
 COPY Cargo.lock Cargo.toml ./
-RUN cargo build --release
-
 COPY server ./server
 RUN cargo build --release
 
