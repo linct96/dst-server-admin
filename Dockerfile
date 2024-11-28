@@ -51,9 +51,9 @@ RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.li
 
 RUN sudo dpkg --add-architecture i386 \
   && sudo apt-get -y update \
-  && sudo apt-get -y dist-upgrade \
-  && sudo apt-get -y install screen \
-  && echo "lib install successfully"
+  # && sudo apt-get -y dist-upgrade \
+  # && sudo apt-get -y install screen \
+  && echo 'lib install successfully'
 
 WORKDIR /app
 # 从上一阶段镜像中拷贝编译好的程序
