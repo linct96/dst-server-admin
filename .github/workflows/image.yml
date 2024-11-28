@@ -14,7 +14,7 @@ on:
         description: 'Test Tags'
 
 jobs:
-  buildx:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
