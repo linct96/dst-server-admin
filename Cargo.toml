@@ -3,8 +3,7 @@ resolver = "2"
 
 members = [
   # "packages/rust_server",
-  "asset",
-  "server"
+  "server/*"
   # "packages/tauri"
 ]
 

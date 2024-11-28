@@ -10,7 +10,7 @@ use asset::STATIC_DIR;
 use ini::Ini;
 use serde::{Deserialize, Serialize};
 use tempfile::NamedTempFile;
-use tokio::fs;
+use tokio::{fs, join};
 
 use crate::{
     config::config::PathConfig,
@@ -223,20 +223,27 @@ pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
         ConstantOS::MACOS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
         _ => "http://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
     };
+    let executor_path_buf = match system_info.os {
+        ConstantOS::WINDOWS => Path::new(&path_game.steam_cmd_path)
+            .to_path_buf()
+            .join("steamcmd.exe"),
+        _ => Path::new(&path_game.steam_cmd_path)
+            .to_path_buf()
+            .join("steamcmd.sh"),
+    };
 
-    if Path::new(&path_game.steam_cmd_path).exists() {
-        fs::remove_dir_all(&path_game.steam_cmd_path).await?;
+    if executor_path_buf.exists() {
+        return anyhow::Ok(true);
     }
-    if download_file_path.exists() {
-        fs::remove_dir_all(download_file_path).await?;
-    }
+
+    // if Path::new(&path_game.steam_cmd_path).exists() {
+    //     fs::remove_dir_all(&path_game.steam_cmd_path).await?;
+    // }
     let file_name = file::download_file(download_url, download_file_path_str).await?;
-
     file::unzip_file(
         &format!("{}/{}", download_file_path_str, file_name),
         &path_game.steam_cmd_path,
     )?;
-
     anyhow::Ok(true)
 }
 
@@ -286,7 +293,6 @@ pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
     if Path::new(&game_info.path).exists() {
         let dst_version = fs::read_to_string(dst_version_path).await?;
         game_info.version = dst_version.replace("\n", "").replace("\r", "");
-        
     }
 
     anyhow::Ok(game_info)

@@ -10,7 +10,6 @@ use std::{
     thread,
 };
 use tokio::process::Command as TokioCommand;
-
 use crate::{config::config::PathConfig, service::task::SYSTEM_INFO};
 use crate::{service::task::ConstantOS, utils::file};
 

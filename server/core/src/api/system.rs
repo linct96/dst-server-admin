@@ -44,9 +44,6 @@ pub struct GameInfo {
     pub server_installed: bool,
 }
 
-
-
-
 pub async fn force_install_dst_server() -> ResBody<bool> {
     let result = service::game::service_force_install_dst_server().await;
 
