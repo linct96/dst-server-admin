@@ -12,6 +12,10 @@ on:
         default: 'info'
       tags:
         description: 'Test Tags'
+        
+permissions:
+  contents: write # needed to update the data of a release
+  packages: write
 
 jobs:
   build:
