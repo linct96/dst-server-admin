@@ -1,10 +1,11 @@
 FROM node:20-alpine as builder-web
 
 WORKDIR /app
-RUN npm install -g pnpm --registry=https://npmreg.proxy.ustclug.org/
+# RUN npm install -g pnpm --registry=https://npmreg.proxy.ustclug.org/
+RUN npm install -g pnpm
 COPY .npmrc package.json pnpm-workspace.yaml pnpm-lock.yaml web/package.json ./
 RUN pnpm install
-COPY web web
+COPY web ./web
 RUN pnpm run build:web
 
 # # 使用 Nginx 作为 Web 服务器
