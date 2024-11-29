@@ -40,22 +40,38 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.FULL_TOKEN }}
+          
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5.6.1
+        with:
+          images: |
+            linct96/dst-server-admin
+            ghcr.io/${{ github.repository }}
 
       - name: Build and push to Docker Hub
         uses: docker/build-push-action@v6.10.0
         with:
           context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64/v8
-          push: true
-          tags: linct96/dst-admin-server:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+
+      # - name: Build and push to Docker Hub
+      #   uses: docker/build-push-action@v6.10.0
+      #   with:
+      #     context: .
+      #     file: ./Dockerfile
+      #     platforms: linux/amd64,linux/arm64/v8
+      #     push: true
+      #     tags: linct96/dst-admin-server:latest
             
 
-      - name: Build and push to GitHub Container Registry
-        uses: docker/build-push-action@v6.10.0
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64/v8
-          push: true
-          tags: linct96/dst-admin-server:latest
+      # - name: Build and push to GitHub Container Registry
+      #   uses: docker/build-push-action@v6.10.0
+      #   with:
+      #     context: .
+      #     file: ./Dockerfile
+      #     platforms: linux/amd64,linux/arm64/v8
+      #     push: true
+      #     tags: linct96/dst-admin-server:latest
