@@ -50,13 +50,19 @@ jobs:
             ghcr.io/${{ github.repository }}
 
       - name: Build and push to Docker Hub
+        id: push
         uses: docker/build-push-action@v6.10.0
         with:
           context: .
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: dst-server-admin
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
       # - name: Build and push to Docker Hub
       #   uses: docker/build-push-action@v6.10.0
       #   with:
