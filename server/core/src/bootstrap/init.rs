@@ -32,7 +32,7 @@ fn init_config() {
 }
 
 async fn init_server() {
-    tracing_subscriber::fmt::init();
+    
     let port = "9527";
     let router = api::route::root();
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
@@ -84,6 +84,7 @@ async fn init_periodic_task() {
 }
 
 pub async fn entry() {
+    tracing_subscriber::fmt::init();
     init_periodic_task().await;
     init_config();
     init_database().expect("Failed to initialize database");

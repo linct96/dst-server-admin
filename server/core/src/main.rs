@@ -17,11 +17,8 @@ use axum::{http::HeaderMap, routing::get, Json, Router};
 use asset::STATIC_DIR;
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
 use tempfile::{Builder, NamedTempFile};
-use utils::shell::{get_screen_task, run_bash_command, run_cmd_command};
 
-async fn t_login2(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> &'static str {
-    "Hello, World!"
-}
+
 pub async fn t_login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> Res<AuthBody> {
     let res = login_service(login_req, header).await;
     match res {
@@ -32,17 +29,7 @@ pub async fn t_login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> 
         Err(e) => Res::<AuthBody>::with_err(&e.to_string()),
     }
 }
-async fn t_login3() -> Res<AuthBody> {
-    let res = login_service2().await;
-    print!("1:");
-    match res {
-        Ok(x) => {
-            print!("login success: {}", x.exp);
-            Res::<AuthBody>::with_data(x)
-        }
-        Err(e) => Res::<AuthBody>::with_err(&e.to_string()),
-    }
-}
+
 
 pub fn create_temp_file(content: &str) -> io::Result<PathBuf> {
     // 使用 Builder 模式创建持久化的临时文件
