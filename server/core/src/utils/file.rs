@@ -1,23 +1,12 @@
-use ::colored::Colorize;
 use reqwest::header::CONTENT_DISPOSITION;
-use reqwest::Error;
 use std::env::consts::OS;
-use std::fs;
-use std::io;
 use std::io::Write;
-use std::path::Path;
-use std::path::PathBuf;
-use std::time::Duration;
+use std::{fs, io, path};
 use tempfile::Builder;
-use tokio::time::sleep;
-use zip::ZipArchive;
-
-use crate::config::config::Config;
-
-pub const CONFIG_DIR_NAME: &str = ".dst-server";
+use tokio::time;
 
 pub fn is_dir(path: &str) -> bool {
-    Path::new(path).is_dir()
+    path::Path::new(path).is_dir()
 }
 
 pub fn create_dir(path: &str) -> bool {
@@ -46,7 +35,7 @@ pub fn list_dir_with_target_file(path: &str, file_name: &str) -> Result<Vec<Stri
         let entry_name = entry.file_name();
         // 过滤非文件夹类型
         if entry_type.is_dir() {
-            if PathBuf::from(entry_path).join(file_name).exists() {
+            if path::PathBuf::from(entry_path).join(file_name).exists() {
                 result.push(entry_name.to_str().unwrap().to_string());
             }
         }
@@ -63,7 +52,7 @@ pub fn resolve_path(path: String) -> String {
     resolved_path
 }
 
-pub fn trans_content_to_file(content: &str, suffix: &str) -> io::Result<PathBuf> {
+pub fn trans_content_to_file(content: &str, suffix: &str) -> io::Result<path::PathBuf> {
     let mut temp_file = Builder::new()
         .suffix(suffix)
         .rand_bytes(5) // 生成随机字符串以确保文件名唯一
@@ -79,12 +68,12 @@ pub fn trans_content_to_file(content: &str, suffix: &str) -> io::Result<PathBuf>
 pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String> {
     let client = reqwest::Client::new();
     let max_retries = 3;
-    let retry_delay = Duration::from_secs(2);
+    let retry_delay = time::Duration::from_secs(2);
 
     for attempt in 1..=max_retries {
         match client.get(url).send().await {
             Ok(response) => {
-                let content_disposition = response.headers().get(CONTENT_DISPOSITION).cloned();
+                let content_disposition = response.headers().get(reqwest::header::CONTENT_DISPOSITION).cloned();
                 let filename = match content_disposition {
                     Some(value) => {
                         let value = value.to_str().unwrap().to_string();
@@ -95,7 +84,7 @@ pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String>
                             .unwrap_or(value.len());
                         value[start..end].to_string()
                     }
-                    None => Path::new(url)
+                    None => path::Path::new(url)
                         .file_name()
                         .and_then(|name| name.to_str())
                         .unwrap_or("downloaded_file")
@@ -110,7 +99,7 @@ pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String>
             }
             Err(e) => {
                 if attempt < max_retries {
-                    sleep(retry_delay).await;
+                    time::sleep(retry_delay).await;
                 } else {
                     return Err(anyhow::anyhow!(e));
                 }
@@ -120,7 +109,7 @@ pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String>
     Err(anyhow::anyhow!("Failed to download file"))
 }
 
-fn unzip_gz(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
+fn unzip_gz(origin_path: &path::Path, output_path: &path::Path) -> anyhow::Result<()> {
     let tar_gz_file = std::fs::File::open(origin_path)?;
     let tar_decoder = flate2::read::GzDecoder::new(tar_gz_file);
     let mut archive = tar::Archive::new(tar_decoder);
@@ -131,7 +120,7 @@ fn unzip_gz(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn unzip_zip(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
+fn unzip_zip(origin_path: &path::Path, output_path: &path::Path) -> anyhow::Result<()> {
     let zip_file = std::fs::File::open(origin_path)?;
     let mut archive = zip::ZipArchive::new(zip_file)?;
     for i in 0..archive.len() {
@@ -156,8 +145,8 @@ fn unzip_zip(origin_path: &Path, output_path: &Path) -> anyhow::Result<()> {
 }
 pub fn unzip_file(origin_path: &str, output_path: &str) -> anyhow::Result<()> {
     std::fs::create_dir_all(output_path)?;
-    let origin_path = Path::new(origin_path);
-    let output_path = Path::new(output_path);
+    let origin_path = path::Path::new(origin_path);
+    let output_path = path::Path::new(output_path);
 
     let extension = origin_path.extension().unwrap().to_str().unwrap();
 

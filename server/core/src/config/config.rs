@@ -1,6 +1,5 @@
 use std::{env::consts::OS, path::PathBuf};
 
-use crate::utils::file::resolve_path;
 
 pub struct Config {
     pub steam_cmd_path: &'static str,

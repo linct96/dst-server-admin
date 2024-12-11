@@ -264,11 +264,9 @@ pub async fn service_update_dedicated_server() -> anyhow::Result<bool> {
             let execute = PathBuf::from(path_game.steam_cmd_path.clone()).join("steamcmd.sh");
             let execute_str = execute.to_str().unwrap();
             let mut command = String::from("");
-            command += &format!("chmod +x {}", execute_str);
-            command += &format!(
-                "  && {} +login anonymous +app_update 343050 validate +quit",
-                execute_str
-            );
+            command += &format!("cd {}", path_game.steam_cmd_path);
+            command += " && chmod +x steamcmd.sh";
+            command += " && ./steamcmd.sh +login anonymous +app_update 343050 validate +quit";
             command
         }
     };

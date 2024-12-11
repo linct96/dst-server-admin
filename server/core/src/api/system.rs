@@ -1,19 +1,13 @@
-
-use std::path::{Path, PathBuf};
-
 use crate::api::res::{Res, ResBody};
-use crate::config::config::{Config, PathConfig, CONFIG_PATH};
-use crate::service::game::{DstSaveInfo, StartServerReq};
-use crate::service::s_user::{login_service, AuthBody, UserLoginReq};
+use crate::service;
+use crate::service::game::StartServerReq;
 use crate::service::task::{SystemInfo, SYSTEM_INFO};
 use crate::utils;
-use crate::{constant, service};
 
 use axum::routing::{get, post};
 use axum::Router;
 use axum::{http::HeaderMap, Json};
 use serde::Serialize;
-// use super::res::{Res,Result};
 
 pub fn router_system() -> Router {
     Router::new()
@@ -67,21 +61,5 @@ pub async fn stop_dst_server(header: HeaderMap, Json(req): Json<StartServerReq>)
     match result {
         Ok(_) => ResBody::success(true),
         Err(e) => ResBody::err(false, e.to_string()),
-    }
-}
-
-pub async fn get_system_info_v(
-    header: HeaderMap,
-    Json(login_req): Json<UserLoginReq>,
-) -> Res<AuthBody> {
-    // let db = DB.get_or_init(db_conn).await;
-    // match service::sys_user::login(db, login_req, header).await {
-    //     Ok(x) => Res::with_data(x),
-    //     Err(e) => Res::with_err(&e.to_string()),
-    // }
-    let res = login_service(login_req, header).await;
-    match res {
-        Ok(x) => Res::<AuthBody>::with_data(x),
-        Err(e) => Res::<AuthBody>::with_err(&e.to_string()),
     }
 }
