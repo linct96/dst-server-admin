@@ -1,7 +1,9 @@
 use crate::{api::res::ResBody, service::game::{self, GameInfo}, utils};
+use asset::STATIC_DIR;
 use axum::{
     http::HeaderMap, routing::{get, post}, Json, Router
 };
+use std::fs;
 
 pub fn router_game() -> Router {
     Router::new()
@@ -15,7 +17,10 @@ pub fn router_game() -> Router {
     // 登录
 }
 pub async fn test_fn() -> ResBody<bool> {
-    let result = utils::shell::install_lib().await;
+    let file = STATIC_DIR.get_file("install_cmd.sh");
+    // let script_content = fs::read_to_string(file).expect("Failed to read script file");
+
+    let result = utils::shell::execute_script(&"./install_cmd.sh").await;
     match result {
         Ok(_) => ResBody::success(true),
         Err(e) => ResBody::err(false, e.to_string()),

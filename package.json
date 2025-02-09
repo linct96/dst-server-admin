@@ -6,6 +6,7 @@
   "scripts": {
     "dev:web": "pnpm --filter=web dev",
     "dev:server": "cargo run",
+    "build:server": "cargo build --release",
     "dev:app": "pnpm --filter=app dev",
     "dev:tauri": "pnpm --filter=tauri dev",
     "build": "pnpm --filter=web build",

@@ -13,6 +13,36 @@ use tokio::process::Command as TokioCommand;
 use crate::{config::config::PathConfig, service::task::SYSTEM_INFO};
 use crate::{service::task::ConstantOS, utils::file};
 
+pub async fn execute_script(script_path: &str) -> anyhow::Result<Option<u32>> {
+    // 创建一个 Command 对象，指定要执行的 shell 命令
+    let mut child = match OS {
+        "windows" => {
+            let mut cm = TokioCommand::new("cmd");
+            cm.arg(script_path);
+            cm
+        }
+        _ => {
+            let mut cm = TokioCommand::new("sh");
+            cm.arg(script_path);
+            cm
+        }
+    }
+    .spawn()
+    .expect("Failed to execute command");
+    // let mut child = command.spawn().expect("Failed to execute command");
+
+    // 等待命令执行完成
+    let id: Option<u32> = child.id();
+    let status = child.wait().await.expect("Failed to wait on child");
+
+    if status.success() {
+        println!("{}", "脚本执行成功".green());
+    } else {
+        println!("{}", "脚本执行失败".red());
+        Err(anyhow::anyhow!("脚本执行失败"))?;
+    }
+    Ok(id)
+}
 pub async fn execute_command(command: &str) -> anyhow::Result<Option<u32>> {
     // 创建一个 Command 对象，指定要执行的 shell 命令
     let mut child = match OS {
