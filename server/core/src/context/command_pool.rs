@@ -51,6 +51,8 @@ impl CommandPool {
             .insert(pid.to_string(), pid);
 
         let running_commands = self.running_commands.clone();
+        
+
         tokio::spawn({
             async move {
                 let _ = child.wait().await; // 等待命令完成
