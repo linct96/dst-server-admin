@@ -60,19 +60,11 @@ async fn main()-> anyhow::Result<()> {
     // 打印文件内容
     // println!("File contents:\n{}", contents);
     println!("Hello, world12!");
+    
     let command = "echo Hello, World!";
-
-    let command_pool = command_pool::COMMAND_POOL.lock().unwrap();
-    if let Some(command_id) = command_pool.execute_command(command).await? {
-        println!("正在执行的命令 ID: {}", command_id);
-    }
-    let commands = command_pool.get_running_commands();
-    println!("正在执行的命令 ID: {:#?}", commands);
-    // let command_pool = crate::context::command_pool::COMMAND_POOL.lock().unwrap();
-    // if let Some(command_id) = command_pool.execute_command(command).await? {
-    //     println!("正在执行的命令 ID: {}", command_id);
-    // }
-
+    let command_pool = crate::context::command_pool::COMMAND_POOL.lock().unwrap();
+    let command_id = command_pool.execute_command(command).await?;
+    println!("正在执行的命令 ID: {:#?}", command_id);
     bootstrap::init().await;
 
     Ok(())

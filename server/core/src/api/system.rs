@@ -20,9 +20,14 @@ pub fn router_system() -> Router {
         .route("/get_running_commands", get(get_running_commands)) // 启动游戏服务器
 }
 
-pub async fn get_running_commands() -> ResBody<Vec<u32>> {
-    let command_pool = command_pool::COMMAND_POOL.lock().unwrap();
-    ResBody::success(command_pool.get_running_commands())
+pub async fn get_running_commands() -> ResBody<bool> {
+    let result = service::game::service_get_running_commands().await;
+    println!("正在执行的命令 ID: {:#?}", result);
+    
+    match result {
+        Ok(data) => ResBody::success(true),
+        Err(e) => ResBody::err(false, e.to_string()),
+    }
 }
 
 pub async fn test_fn() -> ResBody<bool> {

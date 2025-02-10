@@ -13,10 +13,7 @@ use tempfile::NamedTempFile;
 use tokio::{fs, join};
 
 use crate::{
-    config::config::PathConfig,
-    constant::{self, path::PATH_GAME},
-    service::task::{ConstantOS, SYSTEM_INFO},
-    utils::{file, shell},
+    config::config::PathConfig, constant::{self, path::PATH_GAME}, context::command_pool, service::task::{ConstantOS, SYSTEM_INFO}, utils::{file, shell}
 };
 
 pub async fn service_force_install_dst_server() -> Result<bool> {
@@ -294,4 +291,11 @@ pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
     }
 
     anyhow::Ok(game_info)
+}
+
+pub async fn service_get_running_commands() -> anyhow::Result<Vec<u32>> {
+    let command_pool: std::sync::MutexGuard<'_, command_pool::CommandPool> = command_pool::COMMAND_POOL.lock().unwrap();
+    // command_pool.execute_command("echo Hello, World!").await.expect("执行命令失败");
+    let commands = command_pool.get_running_commands();
+    anyhow::Ok(commands)
 }
