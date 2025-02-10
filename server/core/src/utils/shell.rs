@@ -63,14 +63,14 @@ pub async fn execute_command(command: &str) -> anyhow::Result<Option<u32>> {
 
     // 等待命令执行完成
     let id: Option<u32> = child.id();
-    let status = child.wait().await.expect("Failed to wait on child");
+    // let status = child.wait().await.expect("Failed to wait on child");
 
-    if status.success() {
-        println!("{}", "脚本执行成功".green());
-    } else {
-        println!("{}", "脚本执行失败".red());
-        Err(anyhow::anyhow!("脚本执行失败"))?;
-    }
+    // if status.success() {
+    //     println!("{}", "脚本执行成功".green());
+    // } else {
+    //     println!("{}", "脚本执行失败".red());
+    //     Err(anyhow::anyhow!("脚本执行失败"))?;
+    // }
     Ok(id)
 }
 pub async fn install_lib() -> anyhow::Result<()> {

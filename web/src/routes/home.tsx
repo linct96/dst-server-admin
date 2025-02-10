@@ -104,6 +104,13 @@ function Home() {
     const data = await res.json()
     console.log(data)
   }
+  const handleTest = async () => {
+    const res = await fetch(`${SERVER_URL}/api/auth/game/test_fn`, {
+      method: 'GET'
+      // body: JSON.stringify({})
+    })
+    // const data = await res.json()
+  }
   useEffect(() => {
     // init()
   }, [])
@@ -118,6 +125,7 @@ function Home() {
             title="饥荒服务器信息"
             extra={
               <Space>
+                <Button onClick={handleTest}>测试</Button>
                 <Button onClick={handleForceInstall}>安装</Button>
               </Space>
             }

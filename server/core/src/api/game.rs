@@ -3,7 +3,7 @@ use asset::STATIC_DIR;
 use axum::{
     http::HeaderMap, routing::{get, post}, Json, Router
 };
-use std::fs;
+use std::{env, fs::{self, File}, io::Read, string};
 
 pub fn router_game() -> Router {
     Router::new()
@@ -16,14 +16,23 @@ pub fn router_game() -> Router {
         .route("/stop_dst_server", post(stop_dst_server))
     // 登录
 }
-pub async fn test_fn() -> ResBody<bool> {
-    let file = STATIC_DIR.get_file("install_cmd.sh");
+pub async fn test_fn() -> ResBody<String> {
+    // let file = STATIC_DIR.get_file("install_cmd.sh");
     // let script_content = fs::read_to_string(file).expect("Failed to read script file");
+    let exe_path = env::current_exe().unwrap();
+    let debug_dir = exe_path.parent().expect("无法获取可执行文件目录");
+    let script_path = debug_dir.join("assets/t.bat");
 
-    let result = utils::shell::execute_script(&"./install_cmd.sh").await;
+    let mut file = File::open(script_path).expect("无法打开脚本文件");
+    let mut script_content = String::new();
+    file.read_to_string(&mut script_content).expect("无法读取脚本文件");
+    println!("BAT 文件内容:\n{}", script_content);
+
+    let result = utils::shell::execute_command(&script_content).await;
+
     match result {
-        Ok(_) => ResBody::success(true),
-        Err(e) => ResBody::err(false, e.to_string()),
+        Ok(_) => ResBody::success(script_content),
+        Err(e) => ResBody::err(script_content, e.to_string()),
     }
 }
 

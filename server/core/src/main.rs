@@ -5,10 +5,12 @@ mod db;
 mod service;
 mod utils;
 mod constant;
+mod context;
+use context::command_pool;
 use std::{
     env, fs,
     io::{self, Write},
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, sync::Arc,
 };
 
 use api::res::{Res, ResBody};
@@ -50,7 +52,7 @@ pub fn create_temp_file(content: &str) -> io::Result<PathBuf> {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main()-> anyhow::Result<()> {
     // let temp_file_path = create_temp_file("Hello, Rust!").unwrap();
     // println!("Temp file path: {:?}", temp_file_path);
     // 读取文件内容
@@ -58,9 +60,20 @@ async fn main() {
     // 打印文件内容
     // println!("File contents:\n{}", contents);
     println!("Hello, world12!");
-    
+    let command = "echo Hello, World!";
+
+    let command_pool = command_pool::COMMAND_POOL.lock().unwrap();
+    if let Some(command_id) = command_pool.execute_command(command).await? {
+        println!("正在执行的命令 ID: {}", command_id);
+    }
+    // let command_pool = crate::context::command_pool::COMMAND_POOL.lock().unwrap();
+    // if let Some(command_id) = command_pool.execute_command(command).await? {
+    //     println!("正在执行的命令 ID: {}", command_id);
+    // }
+
     bootstrap::init().await;
 
+    Ok(())
     // 获取 resources 目录中的 config.json 文件
     // if let Some(file) = STATIC_DIR.get_file("install_macOS2.json") {
     //     // 打印文件内容
