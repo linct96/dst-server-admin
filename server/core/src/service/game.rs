@@ -294,8 +294,8 @@ pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
 }
 
 pub async fn service_get_running_commands() -> anyhow::Result<Vec<u32>> {
-    let command_pool: std::sync::MutexGuard<'_, command_pool::CommandPool> = command_pool::COMMAND_POOL.lock().unwrap();
+    // let command_pool: std::sync::MutexGuard<'_, command_pool::CommandPool> = command_pool::COMMAND_POOL.lock().unwrap();
     // command_pool.execute_command("echo Hello, World!").await.expect("执行命令失败");
-    let commands = command_pool.get_running_commands();
-    anyhow::Ok(commands)
+    // let commands = command_pool.get_running_commands();
+    anyhow::Ok(vec![])
 }

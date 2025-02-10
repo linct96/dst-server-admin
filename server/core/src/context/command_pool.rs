@@ -1,15 +1,19 @@
 use once_cell::sync::Lazy;
-use std::{env::consts::OS, sync::{Arc, Mutex}};
-use tokio::{process::Command, sync::Semaphore};
-use std::collections::HashMap;
 
-pub static COMMAND_POOL: Lazy<Mutex<CommandPool>> = Lazy::new(|| {
-    Mutex::new(CommandPool::new(5)) // 限制同时执行 5 个命令
+use std::collections::HashMap;
+use std::{env, sync::Arc};
+use tokio::{
+    process::Command,
+    sync::{Mutex, Semaphore},
+};
+
+static COMMAND_POOL: Lazy<Arc<CommandPool>> = Lazy::new(|| {
+    Arc::new(CommandPool::new(5)) // 限制同时执行 5 个命令
 });
 
-pub struct CommandPool {
+struct CommandPool {
     semaphore: Arc<Semaphore>,
-    running_commands: Arc<Mutex<HashMap<u32, String>>>,
+    running_commands: Arc<Mutex<HashMap<String, u32>>>,
 }
 
 impl CommandPool {
@@ -20,9 +24,10 @@ impl CommandPool {
         }
     }
 
-    pub async fn execute_command(&self, command: &str) -> anyhow::Result<Option<u32>> {
-        let permit = self.semaphore.acquire().await?;
-        let child = match OS {
+    pub async fn execute_command(&self, command: &str) -> anyhow::Result<u32> {
+        let _permit = self.semaphore.acquire().await?;
+        
+        let mut child = match env::consts::OS {
             "windows" => {
                 let mut cm = Command::new("cmd");
                 cm.arg("/C").arg(command);
@@ -34,25 +39,30 @@ impl CommandPool {
                 cm
             }
         }
-        .spawn()
-        .expect("Failed to execute command");
+        .spawn()?;
 
-        
-        let id: Option<u32> = child.id();
-        if let Some(id) = id {
-            // 将命令 ID 和命令字符串存储到 HashMap 中
-            self.running_commands.lock().unwrap().insert(id, command.to_string());
-        }
+        let pid = child
+            .id()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get process ID"))?;
 
-        // 释放许可
-        drop(permit);
+        self.running_commands
+            .lock()
+            .await
+            .insert(pid.to_string(), pid);
 
-        Ok(id)
+        let running_commands = self.running_commands.clone();
+        tokio::spawn({
+            async move {
+                let _ = child.wait().await; // 等待命令完成
+                running_commands.lock().await.remove(&pid.to_string()); // 清理
+                // drop(_permit); // 释放信号量许可
+            }
+        });
+
+        Ok(pid)
     }
 
-    pub fn get_running_commands(&self) -> Vec<u32> {
-        let commands = self.running_commands.lock().unwrap();
-        commands.keys().cloned().collect() // 返回所有正在执行的命令 ID
+    pub async fn get_running_commands(&self) -> HashMap<String, u32> {
+        self.running_commands.lock().await.clone()
     }
-
 }
