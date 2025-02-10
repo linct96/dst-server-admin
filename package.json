@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev:web": "pnpm --filter=web dev",
-    "dev:server": "cargo watch -x run",
+    "dev:server": "cd server/core && cargo watch -x run",
     "build:server": "cargo build --release",
     "dev:app": "pnpm --filter=app dev",
     "dev:tauri": "pnpm --filter=tauri dev",

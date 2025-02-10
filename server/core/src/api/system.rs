@@ -1,4 +1,5 @@
 use crate::api::res::{Res, ResBody};
+use crate::context::command_pool;
 use crate::service;
 use crate::service::game::StartServerReq;
 use crate::service::task::{SystemInfo, SYSTEM_INFO};
@@ -16,6 +17,12 @@ pub fn router_system() -> Router {
         .route("/start_dst_server", post(start_dst_server)) // 启动游戏服务器
         .route("/stop_dst_server", post(stop_dst_server)) // 启动游戏服务器
         .route("/test_fn", get(test_fn)) // 启动游戏服务器
+        .route("/get_running_commands", get(get_running_commands)) // 启动游戏服务器
+}
+
+pub async fn get_running_commands() -> ResBody<Vec<u32>> {
+    let command_pool = command_pool::COMMAND_POOL.lock().unwrap();
+    ResBody::success(command_pool.get_running_commands())
 }
 
 pub async fn test_fn() -> ResBody<bool> {

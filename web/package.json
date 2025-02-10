@@ -23,12 +23,11 @@
     "tailwindcss": "^3.4.4"
   },
   "devDependencies": {
-    "@marthemis/eslint-config": "^1.0.5",
+    "@marthemis/eslint-config": "^2.0.1",
     "@tanstack/router-devtools": "^1.87.1",
     "@tanstack/router-plugin": "^1.86.0",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.7.2",

@@ -66,6 +66,8 @@ async fn main()-> anyhow::Result<()> {
     if let Some(command_id) = command_pool.execute_command(command).await? {
         println!("正在执行的命令 ID: {}", command_id);
     }
+    let commands = command_pool.get_running_commands();
+    println!("正在执行的命令 ID: {:#?}", commands);
     // let command_pool = crate::context::command_pool::COMMAND_POOL.lock().unwrap();
     // if let Some(command_id) = command_pool.execute_command(command).await? {
     //     println!("正在执行的命令 ID: {}", command_id);
