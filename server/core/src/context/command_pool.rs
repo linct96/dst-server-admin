@@ -25,7 +25,7 @@ impl CommandPool {
     }
 
     pub async fn execute_command(&self, command: &str) -> anyhow::Result<u32> {
-        let _permit = self.semaphore.acquire().await?;
+        let permit = self.semaphore.acquire().await?;
         
         let mut child = match env::consts::OS {
             "windows" => {
@@ -55,7 +55,7 @@ impl CommandPool {
             async move {
                 let _ = child.wait().await; // 等待命令完成
                 running_commands.lock().await.remove(&pid.to_string()); // 清理
-                // drop(_permit); // 释放信号量许可
+                drop(permit); // 释放信号量许可
             }
         });
 
