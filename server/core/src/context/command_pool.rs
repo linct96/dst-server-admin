@@ -25,8 +25,10 @@ impl CommandPool {
     }
 
     pub async fn execute_command(&self, command: &str) -> anyhow::Result<u32> {
-        let permit = self.semaphore.acquire().await?;
-        
+        let semaphore_clone = self.semaphore.clone();
+        let running_commands_clone = self.running_commands.clone();
+        let permit = semaphore_clone.acquire().await?;
+
         let mut child = match env::consts::OS {
             "windows" => {
                 let mut cm = Command::new("cmd");
@@ -40,30 +42,27 @@ impl CommandPool {
             }
         }
         .spawn()?;
-
+    
         let pid = child
             .id()
             .ok_or_else(|| anyhow::anyhow!("Failed to get process ID"))?;
-
+    
         self.running_commands
             .lock()
             .await
             .insert(pid.to_string(), pid);
-
-        let running_commands = self.running_commands.clone();
-        
-
+    
+    
         tokio::spawn({
             async move {
                 let _ = child.wait().await; // 等待命令完成
-                running_commands.lock().await.remove(&pid.to_string()); // 清理
+                running_commands_clone.lock().await.remove(&pid.to_string()); // 清理
                 drop(permit); // 释放信号量许可
             }
         });
-
+    
         Ok(pid)
     }
-
     pub async fn get_running_commands(&self) -> HashMap<String, u32> {
         self.running_commands.lock().await.clone()
     }
