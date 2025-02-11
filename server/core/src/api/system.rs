@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use crate::api::res::{Res, ResBody};
-use crate::context::command_pool;
+use crate::context::command_pool::{EnumCommand, COMMAND_POOL};
 use crate::service;
 use crate::service::game::StartServerReq;
 use crate::service::task::{SystemInfo, SYSTEM_INFO};
@@ -20,14 +22,21 @@ pub fn router_system() -> Router {
         .route("/get_running_commands", get(get_running_commands)) // 启动游戏服务器
 }
 
-pub async fn get_running_commands() -> ResBody<Vec<u32>> {
-    let result = service::game::service_get_running_commands().await;
-    println!("正在执行的命令 ID: {:#?}", result);
+
+#[derive(Serialize)]
+struct CommandsPair {
+    command: String,
+    pid: u32,
+}
+pub async fn get_running_commands() -> ResBody<HashMap<EnumCommand, u32>> {
+    let command_pool = &*COMMAND_POOL;
+    let commands = command_pool.get_running_commands().await;
+    // let result:Vec<CommandsPair> = commands.iter().map(|(key, value)| CommandsPair {
+    //     command: key.clone(),
+    //     pid: *value,
+    // }).collect();
+    ResBody::success(commands)
     
-    match result {
-        Ok(data) => ResBody::success(data),
-        Err(e) => ResBody::err(vec![], e.to_string()),
-    }
 }
 
 pub async fn test_fn() -> ResBody<bool> {

@@ -1,19 +1,21 @@
-use crate::{api::res::ResBody, service::game::{self, GameInfo}, utils};
+use crate::{api::res::ResBody, context::command_pool::{EnumCommand, COMMAND_POOL}, service::game::{self, GameInfo}, utils};
 use asset::STATIC_DIR;
 use axum::{
     http::HeaderMap, routing::{get, post}, Json, Router
 };
-use std::{env, fs::{self, File}, io::Read, string};
+use std::{collections::HashMap, env, fs::{self, File}, io::Read, string};
 
 pub fn router_game() -> Router {
     Router::new()
-        .route("/test_fn", get(test_fn))
+        .route("/test_fn", get(get_running_commands))
         .route("/get_game_info", get(get_game_info))
         .route("/get_all_saves", get(get_all_saves))
         .route("/install_steam_cmd", post(install_steam_cmd))
+        .route("/install_dedicated_server", post(install_dedicated_server))
         .route("/update_dedicated_server", post(update_dedicated_server))
         .route("/start_dst_server", post(start_dst_server))
         .route("/stop_dst_server", post(stop_dst_server))
+        .route("/get_running_commands", post(get_running_commands))
     // 登录
 }
 pub async fn test_fn() -> ResBody<String> {
@@ -36,6 +38,14 @@ pub async fn test_fn() -> ResBody<String> {
     }
 }
 
+pub async fn get_running_commands() -> ResBody<HashMap<EnumCommand, u32>> {
+    let command_pool = &*COMMAND_POOL;
+    let commands = command_pool.get_running_commands().await;
+
+    ResBody::success(commands)
+    
+}
+
 pub async fn get_game_info() -> ResBody<GameInfo> {
     let result = game::service_get_game_info().await;
 
@@ -53,11 +63,20 @@ pub async fn install_steam_cmd() -> ResBody<bool> {
     }
 }
 
-pub async fn update_dedicated_server() -> ResBody<bool> {
+pub async fn install_dedicated_server(header: HeaderMap, Json(req): Json<game::InstallDedicatedServerReq>) -> ResBody<u32> {
+    let result = game::service_install_dedicated_server(req).await;
+    match result {
+        Ok(pid) => ResBody::success(pid),
+        Err(e) => ResBody::err(0, e.to_string()),
+    }
+}
+
+
+pub async fn update_dedicated_server() -> ResBody<u32> {
     let result = game::service_update_dedicated_server().await;
     match result {
-        Ok(_) => ResBody::success(true),
-        Err(e) => ResBody::err(false, e.to_string()),
+        Ok(pid) => ResBody::success(pid),
+        Err(e) => ResBody::err(0, e.to_string()),
     }
 }
 

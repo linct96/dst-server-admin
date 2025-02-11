@@ -13,7 +13,7 @@ use tempfile::NamedTempFile;
 use tokio::{fs, join};
 
 use crate::{
-    config::config::PathConfig, constant::{self, path::PATH_GAME}, context::command_pool, service::task::{ConstantOS, SYSTEM_INFO}, utils::{file, shell}
+    config::config::PathConfig, constant::{self, path::PATH_GAME}, context::command_pool::{self, COMMAND_POOL}, service::task::{ConstantOS, SYSTEM_INFO}, utils::{file, shell}
 };
 
 pub async fn service_force_install_dst_server() -> Result<bool> {
@@ -211,7 +211,7 @@ async fn remove_dst_server() -> Result<bool> {
 }
 
 pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
-    let system_info = SYSTEM_INFO.lock().await.clone();
+    let system_info: super::task::SystemInfo = SYSTEM_INFO.lock().await.clone();
     let path_game = constant::path::PATH_GAME.lock().await.clone();
     let download_file_path = Path::new("./download");
     let download_file_path_str = download_file_path.to_str().unwrap();
@@ -244,7 +244,48 @@ pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
     anyhow::Ok(true)
 }
 
-pub async fn service_update_dedicated_server() -> anyhow::Result<bool> {
+#[derive(Deserialize, Debug)]
+pub struct InstallDedicatedServerReq {
+    force: Option<bool>,
+}
+pub async fn service_install_dedicated_server(req: InstallDedicatedServerReq) -> anyhow::Result<u32> {
+    let force = req.force.unwrap_or(false);
+    let path_game = PATH_GAME.lock().await.clone();
+    service_install_steam_cmd().await?;
+    let pid =service_update_dedicated_server().await?;
+    anyhow::Ok(pid)
+}
+
+pub async fn service_update_dedicated_server() -> anyhow::Result<u32> {
+    let path_game = PATH_GAME.lock().await.clone();
+    let execute_command = match OS {
+        "windows" => {
+            let execute = PathBuf::from(path_game.steam_cmd_path.clone()).join("steamcmd.exe");
+            let execute_str = execute.to_str().unwrap();
+            let mut command = String::from("");
+            command += &format!(
+                "{} +login anonymous +app_update 343050 validate +quit",
+                execute_str
+            );
+            command
+        }
+        _ => {
+            let execute = PathBuf::from(path_game.steam_cmd_path.clone()).join("steamcmd.sh");
+            let execute_str = execute.to_str().unwrap();
+            let mut command = String::from("");
+            command += &format!("cd {}", path_game.steam_cmd_path);
+            command += " && chmod +x steamcmd.sh";
+            command += " && ./steamcmd.sh +login anonymous +app_update 343050 validate +quit";
+            command
+        }
+    };
+    let pool = &*command_pool::COMMAND_POOL;
+    let pid = pool.execute_command(command_pool::EnumCommand::UpdateDedicatedServer, &execute_command).await?;
+    anyhow::Ok(pid)
+}
+
+
+pub async fn service_update_dedicated_server_bak() -> anyhow::Result<bool> {
     let path_game = PATH_GAME.lock().await.clone();
     let execute_command = match OS {
         "windows" => {
@@ -295,7 +336,7 @@ pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
 
 pub async fn service_get_running_commands() -> anyhow::Result<Vec<u32>> {
     let pool = &*command_pool::COMMAND_POOL;
-    pool.execute_command("ping www.baidu.com").await?;
+    // pool.execute_command("ping www.baidu.com").await?;
     // command_pool.execute_command("echo Hello, World!").await.expect("执行命令失败");
     let commands = pool.get_running_commands().await;
     
