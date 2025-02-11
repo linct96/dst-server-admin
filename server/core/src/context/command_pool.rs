@@ -7,11 +7,11 @@ use tokio::{
     sync::{Mutex, Semaphore},
 };
 
-static COMMAND_POOL: Lazy<Arc<CommandPool>> = Lazy::new(|| {
+pub static COMMAND_POOL: Lazy<Arc<CommandPool>> = Lazy::new(|| {
     Arc::new(CommandPool::new(5)) // 限制同时执行 5 个命令
 });
 
-struct CommandPool {
+pub struct CommandPool {
     semaphore: Arc<Semaphore>,
     running_commands: Arc<Mutex<HashMap<String, u32>>>,
 }
