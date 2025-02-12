@@ -105,7 +105,7 @@ function Home() {
     console.log(data)
   }
   const handleTest = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/get_running_commands`, {
+    const res = await fetch(`${SERVER_URL}/api/auth/game/test_fn`, {
       method: 'GET'
       // body: JSON.stringify({})
     })

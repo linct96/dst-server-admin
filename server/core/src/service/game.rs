@@ -16,6 +16,18 @@ use crate::{
     config::config::PathConfig, constant::{self, path::PATH_GAME}, context::command_pool::{self, COMMAND_POOL}, service::task::{ConstantOS, SYSTEM_INFO}, utils::{file, shell}
 };
 
+#[derive(Deserialize, Debug)]
+pub struct ConnectToConsoleReq {
+    pid: u32,
+}
+pub async fn service_connect_to_console(req: ConnectToConsoleReq) -> anyhow::Result<bool> {
+    // if OS == "windows" {
+    //     return update_dst_server_windows().await;
+    // } else {
+    //     return update_dst_server_linux().await;
+    // }
+    anyhow::Ok(true)
+}
 pub async fn service_force_install_dst_server() -> Result<bool> {
     remove_dst_server().await?;
     service_update_dst_server().await?;
