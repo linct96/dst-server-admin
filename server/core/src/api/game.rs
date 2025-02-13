@@ -64,19 +64,24 @@ pub async fn test_fn() -> ResBody<String> {
     }
 }
 
-async fn sse_handler() -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+async fn sse_handler() -> Sse<impl Stream<Item = Result<Event, std::io::Error>>> {
     println!("connected");
-
+    let command_pool = &*COMMAND_POOL;
+    let commands = command_pool.get_running_commands().await;
+    let pid = commands.get(&EnumCommand::UpdateDedicatedServer).unwrap();
+    let process_output_stream = command_pool.get_process_output(*pid).await.unwrap();
     // A `Stream` that repeats an event every second
     //
     // You can also create streams from tokio channels using the wrappers in
     // https://docs.rs/tokio-stream
     let st = stream::repeat_with(|| Event::default().data("hi!"));
-    let s = st.map(Ok);
+    // let s = st.map(Ok);
     
     
     let r = tokio_stream::iter([Event::default().data("hi!")]);
-    Sse::new(s).keep_alive(
+    
+    
+    Sse::new(process_output_stream).keep_alive(
         axum::response::sse::KeepAlive::new()
             .interval(Duration::from_secs(1))
             .text("keep-alive-text"),

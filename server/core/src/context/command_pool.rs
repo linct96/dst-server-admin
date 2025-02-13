@@ -1,9 +1,7 @@
-use axum::response::sse::Event;
+use axum::response::sse::{self, Event};
 use futures::{FutureExt, Stream, StreamExt};
 use std::{
-    pin::Pin,
-    task::{Context, Poll},
-    time::Duration,
+    marker::PhantomPinned, pin::Pin, task::{Context, Poll}, time::Duration
 };
 use tokio::{
     io::{AsyncBufReadExt, AsyncRead, BufReader},
@@ -52,10 +50,10 @@ impl ProcessOutput {
 }
 
 impl Stream for ProcessOutput {
-    type Item = Result<Event, std::io::Error>;
+    type Item = Result<Event, tokio::io::Error>;
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut line = String::new();
-        let poll = self.reader.read_line(&mut line);
+        // let poll = self.reader.read_line(&mut line);
         // match self.reader.read_line(&mut line).poll_unpin(cx) {
         //     Poll::Ready(Ok(0)) => {
         //         // 如果读取到 0 字节，表示流结束
@@ -76,7 +74,21 @@ impl Stream for ProcessOutput {
         //         Poll::Pending
         //     }
         // }
-        Poll::Pending
+        let read_line = self.reader.read_line(&mut line);
+        let poll_result = Box::pin(read_line).poll_unpin(cx);
+
+        // let mut poll = self.reader.read_line(&mut line);
+        // let result = Box::pin(self.reader.read_line(&mut line)).poll_unpin(cx);
+        match poll_result {
+            Poll::Ready(Ok(0)) => Poll::Ready(None),
+            Poll::Ready(Ok(size)) =>{
+                Poll::Ready(Some(Ok(Event::default().data("hello process out".to_string()))))
+            },
+            Poll::Ready(Err(e)) => Poll::Ready(Some(Err(e))),
+            Poll::Pending => Poll::Pending,
+        }
+        // Poll::Ready(Some(Ok(Event::default().data("hi!".to_string()))))
+        // Poll::Pending
     }
 }
 
@@ -158,28 +170,8 @@ impl CommandPool {
     pub async fn get_process_output(
         &self,
         pid: u32,
-    ) -> anyhow::Result<impl Stream<Item = anyhow::Result<String, LinesCodecError>>> {
-        let mut child = match env::consts::OS {
-            "windows" => {
-                let mut cm = Command::new("cmd");
-                cm.arg("-p").arg(pid.to_string()).arg("-o").arg("cmd=");
-                cm
-            }
-            _ => {
-                let mut cm = Command::new("sh");
-                cm.arg("-p").arg(pid.to_string()).arg("-o").arg("cmd=");
-                cm
-            }
-        }
-        .stdout(std::process::Stdio::piped())
-        .spawn()?;
-
-        let stdout = child.stdout.take().unwrap();
-        let framed_read = FramedRead::new(stdout, LinesCodec::new());
+    ) -> anyhow::Result<impl Stream<Item = anyhow::Result<sse::Event, tokio::io::Error>>> {
         let process_output = ProcessOutput::new(pid).await?;
-        let stream = tokio_util::io::ReaderStream::new(process_output.reader);
-        let res = stream.map(|result| Event::default().data("hi!"));
-        axum::response::Sse::new(res);
-        anyhow::Ok(framed_read)
+        anyhow::Ok(process_output)
     }
 }
