@@ -29,11 +29,10 @@ export default function CardSaves() {
   const handleGetAllSaves = async () => {
     const res = await fetch(`${SERVER_URL}/api/auth/game/get_all_saves`, {
       method: 'GET'
-      // body: JSON.stringify({})
     })
-    const json = await res.json()
-    console.log(json)
-    setDataSource(json.data)
+    const data = await res.json()
+    console.log('handleGetAllSaves', data)
+    setDataSource(data.data)
   }
   const handleStartDstServer = async (data: {
     cluster: string
@@ -47,7 +46,8 @@ export default function CardSaves() {
       body: JSON.stringify(data)
     })
     const json = await res.json()
-    console.log(json.data)
+
+    console.log("handleStartDstServer", json.data)
   }
   const handleStopDstServer = async (data: {
     cluster: string

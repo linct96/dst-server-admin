@@ -1,5 +1,5 @@
 use std::{
-    env::consts::OS,
+    env::{self, consts::OS},
     io::Write,
     path::{Path, PathBuf},
 };
@@ -13,7 +13,11 @@ use tempfile::NamedTempFile;
 use tokio::{fs, join};
 
 use crate::{
-    config::config::PathConfig, constant::{self, path::PATH_GAME}, context::command_pool::{self, COMMAND_POOL}, service::task::{ConstantOS, SYSTEM_INFO}, utils::{file, shell}
+    config::config::PathConfig,
+    constant::{self, path::PATH_GAME},
+    context::command_pool::{self, EnumCommand, COMMAND_POOL},
+    service::task::{ConstantOS, SYSTEM_INFO},
+    utils::{file, shell},
 };
 
 #[derive(Deserialize, Debug)]
@@ -48,7 +52,7 @@ pub struct StartServerReq {
     cluster: String,
     world: String,
 }
-pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
+pub async fn service_start_dst_server(req: StartServerReq) -> anyhow::Result<u32> {
     let path_game = constant::path::PATH_GAME.lock().await.clone();
     let execute_command = match OS {
         "windows" => {
@@ -80,9 +84,9 @@ pub async fn service_start_dst_server(req: StartServerReq) -> Result<bool> {
             command
         }
     };
-    println!("shell: {}", execute_command);
-    shell::execute_command(&execute_command).await?;
-    Ok(true)
+    let command_pool = &*command_pool::COMMAND_POOL;
+    let pid = command_pool.execute_command(EnumCommand::StartDedicatedServer.as_str().to_string(), &execute_command).await?;
+    anyhow::Ok(pid)
 }
 pub async fn service_stop_dst_server(req: StartServerReq) -> Result<bool> {
     let execute_command = format!(
@@ -223,17 +227,17 @@ async fn remove_dst_server() -> Result<bool> {
 }
 
 pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
-    let system_info: super::task::SystemInfo = SYSTEM_INFO.lock().await.clone();
     let path_game = constant::path::PATH_GAME.lock().await.clone();
     let download_file_path = Path::new("./download");
     let download_file_path_str = download_file_path.to_str().unwrap();
-    let download_url = match system_info.os {
-        ConstantOS::WINDOWS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip",
-        ConstantOS::MACOS => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
+    let download_url = match env::consts::OS {
+        "windows" => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip",
+        "macos" => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
         _ => "http://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
     };
-    let executor_path_buf = match system_info.os {
-        ConstantOS::WINDOWS => Path::new(&path_game.steam_cmd_path)
+
+    let executor_path_buf = match env::consts::OS {
+        "windows" => Path::new(&path_game.steam_cmd_path)
             .to_path_buf()
             .join("steamcmd.exe"),
         _ => Path::new(&path_game.steam_cmd_path)
@@ -242,17 +246,34 @@ pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
     };
 
     if executor_path_buf.exists() {
+        println!("steamCMD 已安装");
         return anyhow::Ok(true);
     }
 
-    // if Path::new(&path_game.steam_cmd_path).exists() {
-    //     fs::remove_dir_all(&path_game.steam_cmd_path).await?;
-    // }
-    let file_name = file::download_file(download_url, download_file_path_str).await?;
-    file::unzip_file(
-        &format!("{}/{}", download_file_path_str, file_name),
-        &path_game.steam_cmd_path,
-    )?;
+    println!("开始下载 steamCMD");
+    // let file_name = file::download_file(download_url, download_file_path_str).await?;
+    println!("steamCMD 下载完成");
+
+    let exe_path = env::current_exe()?;
+    let assets_file_path = match env::consts::OS {
+        "windows" => exe_path.parent().unwrap().join("assets/steamcmd.zip"),
+        "macos" => exe_path.parent().unwrap().join("assets/steamcmd_osx.tar.gz"),
+        _ => exe_path.parent().unwrap().join("assets/steamcmd_linux.tar.gz"),
+    };
+    println!("steamCMD 解压路径from: {}", assets_file_path.to_str().unwrap());
+    println!("steamCMD 解压路径to: {}", &path_game.steam_cmd_path);
+    if assets_file_path.exists() {
+        file::unzip_file(
+            &assets_file_path.to_str().unwrap(),
+            &path_game.steam_cmd_path,
+        )?;
+    }
+    // file::unzip_file(
+    //     &format!("{}/{}", download_file_path_str, file_name),
+    //     &path_game.steam_cmd_path,
+    // )?;
+    
+    println!("steamCMD 解压完成");
     anyhow::Ok(true)
 }
 
@@ -260,11 +281,23 @@ pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
 pub struct InstallDedicatedServerReq {
     force: Option<bool>,
 }
-pub async fn service_install_dedicated_server(req: InstallDedicatedServerReq) -> anyhow::Result<u32> {
+pub async fn service_install_dedicated_server(
+    req: InstallDedicatedServerReq,
+) -> anyhow::Result<u32> {
     let force = req.force.unwrap_or(false);
-    let path_game = PATH_GAME.lock().await.clone();
+    if force {
+        let path_game = constant::path::PATH_GAME.lock().await.clone();
+
+        if Path::new(&path_game.steam_cmd_path).exists() {
+            fs::remove_dir_all(&path_game.steam_cmd_path).await?;
+        }
+        if Path::new(&path_game.dst_server_path).exists() {
+            fs::remove_dir_all(&path_game.dst_server_path).await?;
+        }
+    }
+    println!("service_install_dedicated_server:start");
     service_install_steam_cmd().await?;
-    let pid =service_update_dedicated_server().await?;
+    let pid = service_update_dedicated_server().await?;
     anyhow::Ok(pid)
 }
 
@@ -292,10 +325,16 @@ pub async fn service_update_dedicated_server() -> anyhow::Result<u32> {
         }
     };
     let pool = &*command_pool::COMMAND_POOL;
-    let pid = pool.execute_command(command_pool::EnumCommand::UpdateDedicatedServer, &execute_command).await?;
+    let pid = pool
+        .execute_command(
+            command_pool::EnumCommand::UpdateDedicatedServer
+                .as_str()
+                .to_string(),
+            &execute_command,
+        )
+        .await?;
     anyhow::Ok(pid)
 }
-
 
 pub async fn service_update_dedicated_server_bak() -> anyhow::Result<bool> {
     let path_game = PATH_GAME.lock().await.clone();
@@ -351,6 +390,6 @@ pub async fn service_get_running_commands() -> anyhow::Result<Vec<u32>> {
     // pool.execute_command("ping www.baidu.com").await?;
     // command_pool.execute_command("echo Hello, World!").await.expect("执行命令失败");
     let commands = pool.get_running_commands().await;
-    
+
     anyhow::Ok(commands.values().cloned().collect())
 }

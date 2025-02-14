@@ -1,12 +1,15 @@
 use axum::response::sse::{self, Event};
 use futures::{FutureExt, Stream, StreamExt};
 use std::{
-    marker::PhantomPinned, pin::Pin, task::{Context, Poll}, time::Duration
+    marker::PhantomPinned,
+    pin::Pin,
+    task::{Context, Poll},
+    time::Duration,
 };
 use tokio::{
     io::{AsyncBufReadExt, AsyncRead, BufReader},
     process::{Child, ChildStdout, Command},
-    sync::{Mutex, Semaphore},
+    sync::{Mutex, RwLock, Semaphore},
 };
 
 use once_cell::sync::Lazy;
@@ -81,9 +84,9 @@ impl Stream for ProcessOutput {
         // let result = Box::pin(self.reader.read_line(&mut line)).poll_unpin(cx);
         match poll_result {
             Poll::Ready(Ok(0)) => Poll::Ready(None),
-            Poll::Ready(Ok(size)) =>{
-                Poll::Ready(Some(Ok(Event::default().data("hello process out".to_string()))))
-            },
+            Poll::Ready(Ok(size)) => Poll::Ready(Some(Ok(
+                Event::default().data("hello process out".to_string())
+            ))),
             Poll::Ready(Err(e)) => Poll::Ready(Some(Err(e))),
             Poll::Pending => Poll::Pending,
         }
@@ -94,19 +97,24 @@ impl Stream for ProcessOutput {
 
 #[derive(Serialize, Debug, PartialEq, Eq, Hash, Clone)]
 pub enum EnumCommand {
-    Start,
-    Stop,
+    StartDedicatedServer,
     InstallDedicatedServer,
     UpdateDedicatedServer,
 }
-
 impl EnumCommand {
-    fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
-            EnumCommand::Start => "start",
-            EnumCommand::Stop => "stop",
+            EnumCommand::StartDedicatedServer => "start_dedicated_server",
             EnumCommand::InstallDedicatedServer => "install_dedicated_server",
             EnumCommand::UpdateDedicatedServer => "update_dedicated_server",
+        }
+    }
+
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "install_dedicated_server" => Some(EnumCommand::InstallDedicatedServer),
+            "update_dedicated_server" => Some(EnumCommand::UpdateDedicatedServer),
+            _ => None,
         }
     }
 }
@@ -117,18 +125,31 @@ pub static COMMAND_POOL: Lazy<Arc<CommandPool>> = Lazy::new(|| {
 
 pub struct CommandPool {
     semaphore: Arc<Semaphore>,
-    running_commands: Arc<Mutex<HashMap<EnumCommand, u32>>>,
+    running_commands: Arc<RwLock<HashMap<String, u32>>>,
 }
 
 impl CommandPool {
     pub fn new(max_concurrent: usize) -> Self {
         CommandPool {
             semaphore: Arc::new(Semaphore::new(max_concurrent)),
-            running_commands: Arc::new(Mutex::new(HashMap::new())),
+            running_commands: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
-    pub async fn execute_command(&self, key: EnumCommand, command: &str) -> anyhow::Result<u32> {
+    pub async fn execute_command(&self, key: String, command: &str) -> anyhow::Result<u32> {
+        // let map = self.running_commands.lock().await;
+        // if let Some(v) = map.get(&key) {
+        //     println!("命令已在运行: {}", command);
+        //     return anyhow::Ok(*v);
+        // }
+        {
+            let map = self.running_commands.read().await;
+            if let Some(&pid) = map.get(&key) {
+                let err = format!("命令已在运行: {}, PID: {}", command, pid);
+                println!("{}", err);
+                return Err(anyhow::Error::msg(err));
+            }
+        }
         let permit = self.semaphore.acquire().await?;
 
         let mut child = match env::consts::OS {
@@ -149,23 +170,23 @@ impl CommandPool {
             .id()
             .ok_or_else(|| anyhow::anyhow!("Failed to get process ID"))?;
 
-        self.running_commands.lock().await.insert(key.clone(), pid);
+        self.running_commands.write().await.insert(key.clone(), pid);
 
         let running_commands_clone = self.running_commands.clone();
 
         tokio::spawn({
             let _permit = permit; // 捕获 permit，确保它在任务中保持有效
-
+            let command_key = key.clone();
             async move {
                 let _ = child.wait().await; // 等待命令完成
-                running_commands_clone.lock().await.remove(&key); // 清理
+                running_commands_clone.write().await.remove(&command_key); // 清理
             }
         });
 
         anyhow::Ok(pid)
     }
-    pub async fn get_running_commands(&self) -> HashMap<EnumCommand, u32> {
-        self.running_commands.lock().await.clone()
+    pub async fn get_running_commands(&self) -> HashMap<String, u32> {
+        self.running_commands.read().await.clone()
     }
     pub async fn get_process_output(
         &self,

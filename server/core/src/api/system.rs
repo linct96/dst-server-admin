@@ -23,18 +23,10 @@ pub fn router_system() -> Router {
 }
 
 
-#[derive(Serialize)]
-struct CommandsPair {
-    command: String,
-    pid: u32,
-}
-pub async fn get_running_commands() -> ResBody<HashMap<EnumCommand, u32>> {
+pub async fn get_running_commands() -> ResBody<HashMap<String, u32>> {
     let command_pool = &*COMMAND_POOL;
     let commands = command_pool.get_running_commands().await;
-    // let result:Vec<CommandsPair> = commands.iter().map(|(key, value)| CommandsPair {
-    //     command: key.clone(),
-    //     pid: *value,
-    // }).collect();
+    
     ResBody::success(commands)
     
 }

@@ -30,15 +30,15 @@ use std::{
 
 pub fn router_game() -> Router {
     Router::new()
-        .route("/test_fn", get(sse_handler))
         .route("/get_game_info", get(get_game_info))
         .route("/get_all_saves", get(get_all_saves))
-        .route("/install_steam_cmd", post(install_steam_cmd))
         .route("/install_dedicated_server", post(install_dedicated_server))
         .route("/update_dedicated_server", post(update_dedicated_server))
+        .route("/get_running_commands", post(get_running_commands))
+        .route("/test_fn", get(sse_handler))
+        .route("/install_steam_cmd", post(install_steam_cmd))
         .route("/start_dst_server", post(start_dst_server))
         .route("/stop_dst_server", post(stop_dst_server))
-        .route("/get_running_commands", post(get_running_commands))
         // .route("/get_process_output/:pid", post(get_process_output))
         .route("/sse_handler", get(sse_handler))
     // 登录
@@ -68,7 +68,9 @@ async fn sse_handler() -> Sse<impl Stream<Item = Result<Event, std::io::Error>>>
     println!("connected");
     let command_pool = &*COMMAND_POOL;
     let commands = command_pool.get_running_commands().await;
-    let pid = commands.get(&EnumCommand::UpdateDedicatedServer).unwrap();
+    let pid = commands
+        .get(&EnumCommand::UpdateDedicatedServer.as_str().to_string())
+        .unwrap();
     let process_output_stream = command_pool.get_process_output(*pid).await.unwrap();
     // A `Stream` that repeats an event every second
     //
@@ -76,11 +78,9 @@ async fn sse_handler() -> Sse<impl Stream<Item = Result<Event, std::io::Error>>>
     // https://docs.rs/tokio-stream
     let st = stream::repeat_with(|| Event::default().data("hi!"));
     // let s = st.map(Ok);
-    
-    
+
     let r = tokio_stream::iter([Event::default().data("hi!")]);
-    
-    
+
     Sse::new(process_output_stream).keep_alive(
         axum::response::sse::KeepAlive::new()
             .interval(Duration::from_secs(1))
@@ -106,7 +106,7 @@ async fn sse_handler() -> Sse<impl Stream<Item = Result<Event, std::io::Error>>>
 //         Err(_) => (),
 //     }
 // }
-pub async fn get_running_commands() -> ResBody<HashMap<EnumCommand, u32>> {
+pub async fn get_running_commands() -> ResBody<HashMap<String, u32>> {
     let command_pool = &*COMMAND_POOL;
     let commands = command_pool.get_running_commands().await;
 
@@ -161,12 +161,12 @@ pub async fn get_all_saves() -> ResBody<Vec<game::DstSaveInfo>> {
 pub async fn start_dst_server(
     header: HeaderMap,
     Json(req): Json<game::StartServerReq>,
-) -> ResBody<bool> {
+) -> ResBody<u32> {
     let result = game::service_start_dst_server(req).await;
 
     match result {
-        Ok(_) => ResBody::success(true),
-        Err(e) => ResBody::err(false, e.to_string()),
+        Ok(pid) => ResBody::success(pid),
+        Err(e) => ResBody::err(0, e.to_string()),
     }
 }
 

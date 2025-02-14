@@ -154,5 +154,5 @@ pub fn unzip_file(origin_path: &str, output_path: &str) -> anyhow::Result<()> {
         "gz" => unzip_gz(origin_path, output_path)?,
         _ => unzip_zip(origin_path, output_path)?,
     }
-    Ok(())
+    anyhow::Ok(())
 }

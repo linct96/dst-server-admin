@@ -18,7 +18,8 @@ import {
 import { SERVER_URL } from '../const'
 import { useEffect } from 'react'
 import CardSaves from '../components/CardSaves'
-import CardServer from '../components/CardServer'
+import CardSystem from '../components/CardSystem'
+import { CardServer } from '../components'
 
 type FieldType = {
   host?: string
@@ -45,22 +46,11 @@ function Home() {
   const [form] = Form.useForm<FieldType>()
 
   const init = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/get_game_info`, {
-      method: 'GET'
-      // body: JSON.stringify({})
-    })
-    const data = await res.json()
-    handleGetSystemInfo()
-    // console.log(data)
+    // handleGetSystemInfo()
+    // handleGetGameInfo()
+
   }
 
-  const handleGetSystemInfo = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/system/get_system_info`, {
-      method: 'GET'
-      // body: JSON.stringify({})
-    })
-    const data = await res.json()
-  }
 
   const handleUpdateGame = async () => {
     const res = await fetch(
@@ -71,7 +61,6 @@ function Home() {
       }
     )
     const data = await res.json()
-    console.log(data)
   }
   const handleRefreshDstServer = async () => {
     const res = await fetch(`${SERVER_URL}/api/auth/system/get_game_info`, {
@@ -89,13 +78,7 @@ function Home() {
     const json = await res.json()
     console.log(json.data)
   }
-  const handleForceInstall = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/game/install_steam_cmd`, {
-      method: 'POST'
-      // body: JSON.stringify({})
-    })
-    // const data = await res.json()
-  }
+
   const handleGetAllSaves = async () => {
     const res = await fetch(`${SERVER_URL}/api/auth/system/get_all_saves`, {
       method: 'GET'
@@ -112,47 +95,15 @@ function Home() {
     // const data = await res.json()
   }
   useEffect(() => {
-    // init()
+    init()
   }, [])
 
   return (
     <div className="p-2">
-      <CardServer />
+      <CardSystem />
       <Flex gap="large" style={{ marginTop: '16px' }}>
         <div style={{ flex: 1 }}>
-          <Card
-            bordered={false}
-            title="饥荒服务器信息"
-            extra={
-              <Space>
-                <Button onClick={handleTest}>测试</Button>
-                <Button onClick={handleForceInstall}>安装</Button>
-              </Space>
-            }
-          >
-            <Descriptions
-              size="small"
-              column={1}
-              items={[
-                {
-                  key: '1',
-                  label: '游戏版本',
-                  children: (
-                    <Space>
-                      <span>1.16.5</span>
-                      <a onClick={handleUpdateGame}>更新游戏</a>
-                    </Space>
-                  )
-                },
-                {
-                  key: '2',
-                  label: '模式',
-                  children: '无尽模式'
-                }
-              ]}
-              style={{ width: '320px' }}
-            />
-          </Card>
+          <CardServer />
           <Card
             bordered={false}
             title="当前世界"
