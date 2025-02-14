@@ -152,6 +152,7 @@ impl CommandPool {
         }
         let permit = self.semaphore.acquire().await?;
 
+        println!("执行命令: {}", command);
         let mut child = match env::consts::OS {
             "windows" => {
                 let mut cm = Command::new("cmd");
