@@ -13,13 +13,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@main
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'  # 根据你的项目需求选择 Node.js 版本
+
     - name: Set up Rust
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable  # 你可以选择其他工具链版本
 
-    - name: Install dependencies
-      run: cargo build --release
+    - name: Install pnpm
+      run: npm install -g pnpm && pnpm install
+
+    - name: Build the project
+      run: pnpm run build
 
     - name: Deploy to server
       uses: appleboy/ssh-action@master
