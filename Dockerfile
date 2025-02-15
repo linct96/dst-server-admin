@@ -38,6 +38,7 @@ FROM rust AS builder-server
 #   && echo '' >> ~/.cargo/config.toml
 
 WORKDIR /app
+COPY --from=builder-web /app/web/dist ./web/dist
 COPY Cargo.lock Cargo.toml ./
 COPY server ./server
 RUN cargo build --release
