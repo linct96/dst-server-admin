@@ -1,0 +1,39 @@
+name: Deploy Server
+
+on:
+  push:
+    branches:
+      - main  # 或者你想要部署的分支
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@main
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable  # 你可以选择其他工具链版本
+
+    - name: Install dependencies
+      run: cargo build --release
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        script: |
+          echo "Deploying to server..."
+          mkdir -p /root/auto-deploy-dst-server
+          rm -rf /root/auto-deploy-dst-server/*
+          cd /root/auto-deploy-dst-server
+          scp target/release/server .
+          scp target/release/scripts .
+          scp target/release/index.html .
+          scp target/release/assets .
