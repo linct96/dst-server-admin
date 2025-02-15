@@ -40,8 +40,7 @@ jobs:
           echo "Deploying to server..."
           mkdir -p /root/auto-deploy-dst-server
           rm -rf /root/auto-deploy-dst-server/*
-          cd /root/auto-deploy-dst-server
-          scp target/release/server .
-          scp target/release/scripts .
-          scp target/release/index.html .
-          scp target/release/assets .
+          scp -r target/release/server /root/auto-deploy-dst-server
+          scp -r target/release/scripts /root/auto-deploy-dst-server
+          scp -r target/release/index.html /root/auto-deploy-dst-server
+          scp -r target/release/assets /root/auto-deploy-dst-server
