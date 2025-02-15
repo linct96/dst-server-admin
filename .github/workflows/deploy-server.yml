@@ -45,7 +45,7 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_KEY }} # 若使用密码则删除本行
         port: ${{ secrets.SERVER_PORT }}
-        source: "server.tar.gz"
+        source: "server-auto-deploy-by-github.tar.gz"
         target: "./"
 
     - name: Deploy to server
