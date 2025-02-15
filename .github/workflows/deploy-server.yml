@@ -36,7 +36,7 @@ jobs:
         cp -r ./target/release/scripts ./output
         cp -r ./target/release/assets ./output
         cp -r ./target/release/index.html ./output
-        tar -zvfc server.tar.gz ./output
+        tar -zvfc server-auto-deploy-by-github.tar.gz ./output
 
     - name: Copy files to server # 上传压缩包至服务器
       uses: appleboy/scp-action@v0.1.4
@@ -57,7 +57,7 @@ jobs:
         port: ${{ secrets.SERVER_PORT }}
         script: |
           echo "Deploying to server..."
-          mkdir -p /server-auto-deploy-by-github
-          rm -rf /server-auto-deploy-by-github/*
-          tar -zxvf server.tar.gz -C /server-auto-deploy-by-github
+          rm -rf /server-auto-deploy-by-github
+          # mkdir -p /server-auto-deploy-by-github
+          tar -zxvf server-auto-deploy-by-github.tar.gz
           echo "Deployed to server!"
