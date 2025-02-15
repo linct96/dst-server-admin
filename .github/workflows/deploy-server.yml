@@ -38,9 +38,11 @@ jobs:
         port: ${{ secrets.SERVER_PORT }}
         script: |
           echo "Deploying to server..."
-          mkdir -p /root/auto-deploy-dst-server
-          rm -rf /root/auto-deploy-dst-server/*
-          scp -r target/release/server /root/auto-deploy-dst-server
-          scp -r target/release/scripts /root/auto-deploy-dst-server
-          scp -r target/release/index.html /root/auto-deploy-dst-server
-          scp -r target/release/assets /root/auto-deploy-dst-server
+          mkdir -p /root/server-auto-deploy-by-github
+          rm -rf /root/server-auto-deploy-by-github/*
+          scp -r target/release /root/server-auto-deploy-by-github
+          # scp -r target/release/server /root/server-auto-deploy-by-github
+          # scp -r target/release/scripts /root/server-auto-deploy-by-github
+          # scp -r target/release/index.html /root/server-auto-deploy-by-github
+          # scp -r target/release/assets /root/server-auto-deploy-by-github
+          echo "Deployed to server!"
