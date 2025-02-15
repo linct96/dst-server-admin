@@ -9,7 +9,7 @@
     "dev:server": "cd server/core && cargo run",
     "dev:app": "pnpm --filter=app dev",
     "dev:tauri": "pnpm --filter=tauri dev",
-    "build": "concurrently 'npm:build:server' 'npm:build:web'",
+    "build": "npm run build:web && npm run build:server",
     "build:server": "cargo build --release",
     "build:web": "pnpm --filter=web build",
     "build:tauri": "pnpm --filter=tauri build"
