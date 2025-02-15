@@ -30,7 +30,13 @@ jobs:
       run: pnpm run build
 
     - name: Create tar.gz
-      run: tar -zcvf server.tar.gz ./target/release/
+      run: |
+        mkdir -p ./output
+        cp -r ./target/release/server ./output
+        cp -r ./target/release/scripts ./output
+        cp -r ./target/release/assets ./output
+        cp -r ./target/release/index.html ./output
+        tar -zvfc server.tar.gz ./output
 
     - name: Copy files to server # 上传压缩包至服务器
       uses: appleboy/scp-action@v0.1.4
