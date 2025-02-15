@@ -1,11 +1,11 @@
+use std::io;
+
+use axum::{routing::get, Router};
 use rusqlite::{config, Connection, Result};
 use tokio::time::{interval, Duration};
 
 use crate::{
-    api,
-    db::db::DB,
-    service::task::{SYSTEM_INFO},
-    utils::file::{self, create_dir},
+    api, db::db::DB, routes, service::task::SYSTEM_INFO, utils::file::{self, create_dir}
 };
 
 fn init_database() -> Result<()> {
@@ -31,15 +31,16 @@ fn init_config() {
     }
 }
 
-async fn init_server() {
-    
+async fn init_server()-> Result<(), io::Error> {
     let port = "9527";
     let router = api::route::root();
+    let app_router = routes::app::app_router()?;
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
     println!("Server started on http://localhost:{}", port);
-    axum::serve(listener, router).await.unwrap();
+    axum::serve(listener, app_router).await.unwrap();
+    Ok(())
 }
 
 async fn init_periodic_task() {

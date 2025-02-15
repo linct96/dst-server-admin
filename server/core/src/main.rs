@@ -6,6 +6,7 @@ mod service;
 mod utils;
 mod constant;
 mod context;
+mod routes;
 use context::command_pool;
 use std::{
     env, fs,
