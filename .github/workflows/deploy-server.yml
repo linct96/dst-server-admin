@@ -40,7 +40,7 @@ jobs:
           echo "Deploying to server..."
           mkdir -p /root/server-auto-deploy-by-github
           rm -rf /root/server-auto-deploy-by-github/*
-          rsync -avz --delete ./target/release/ ${USERNAME}@${HOST}:/server-auto-deploy-by-github
+          rsync -avz --delete ./target/release/ ${SERVER_USERNAME}@${SERVER_HOST}:/server-auto-deploy-by-github
           # scp -r target/release /root/server-auto-deploy-by-github
           # scp -r target/release/server /root/server-auto-deploy-by-github
           # scp -r target/release/scripts /root/server-auto-deploy-by-github
