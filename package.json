@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "postinstall": "cargo install cargo-make",
     "dev:web": "pnpm --filter=web dev",
     "dev:server:watch": "cd server/core && cargo watch -x run",
     "dev:server": "cd server/core && cargo run",

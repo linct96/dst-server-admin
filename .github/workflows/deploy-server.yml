@@ -23,6 +23,9 @@ jobs:
       with:
         toolchain: stable  # 你可以选择其他工具链版本
 
+    - name: Install cargo-make
+      run: cargo install cargo-make
+
     - name: Install pnpm
       run: npm install -g pnpm && pnpm install
 
