@@ -31,8 +31,22 @@ alias = "move_to_release_alias"
 script_runner = "bash"
 script = '''
 echo "Moving to release..."
-pwd
+DEST_DIR="./release"
+rm -rf "$DEST_DIR"
+mkdir -p "$DEST_DIR"
+
+cp "./static/*" "$DEST_DIR/"
+
+TARGET_RELEASE_FOLDER = "./target/release"
+for file in "$TARGET_RELEASE_FOLDER"; do
+    # 检查是否是文件且没有后缀或后缀为 .exe
+    if [[ -f "$file" && (! "$file" =~ \. || "$file" =~ \.exe$) ]]; then
+        echo "Moving $file to $DEST_DIR"
+        cp "$file" "$DEST_DIR/"
+    fi
+done
 '''
+
 [tasks.move_to_release_windows_alias]
 script_runner = "powershell"
 script_extension = "ps1"
@@ -55,16 +69,4 @@ foreach ($file in $EXECUTOR_FILES) {
 }
 '''
 
-# DEST_DIR="./release"
-# rm -rf "$DEST_DIR"
-# mkdir -p "$DEST_DIR"
 
-# cp "./static/*" "$DEST_DIR/"
-
-# for file in target/debug/*; do
-#     # 检查是否是文件且没有后缀或后缀为 .exe
-#     if [[ -f "$file" && (! "$file" =~ \. || "$file" =~ \.exe$) ]]; then
-#         echo "Moving $file to $DEST_DIR"
-#         cp "$file" "$DEST_DIR/"
-#     fi
-# done
