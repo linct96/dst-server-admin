@@ -34,7 +34,18 @@ jobs:
 
     - name: Create tar.gz
       run: |
-        tar -zcvf server-auto-deploy-by-github.tar.gz ./release
+        tar -zcvf auto-deploy-server-by-github.tar.gz ./release
+
+    - name: Clear server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        script: |
+          rm -rf ./auto-deploy-server-by-github
+          rm auto-deploy-server-by-github.tar.gz
 
     - name: Copy files to server # 上传压缩包至服务器
       uses: appleboy/scp-action@v0.1.4
@@ -43,7 +54,7 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SERVER_KEY }} # 若使用密码则删除本行
         port: ${{ secrets.SERVER_PORT }}
-        source: "server-auto-deploy-by-github.tar.gz"
+        source: "auto-deploy-server-by-github.tar.gz"
         target: "./"
 
     - name: Deploy to server
@@ -54,8 +65,4 @@ jobs:
         key: ${{ secrets.SERVER_KEY }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
-          echo "Deploying to server..."
-          rm -rf ./server-auto-deploy-by-github
-          # mkdir -p /server-auto-deploy-by-github
-          tar -zxvf server-auto-deploy-by-github.tar.gz
-          echo "Deployed to server!"
+          tar -zxvf auto-deploy-server-by-github.tar.gz
