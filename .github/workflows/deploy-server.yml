@@ -45,7 +45,7 @@ jobs:
         port: ${{ secrets.SERVER_PORT }}
         script: |
           rm -rf ./auto-deploy-server-by-github
-          rm auto-deploy-server-by-github.tar.gz
+          rm -f auto-deploy-server-by-github.tar.gz
 
     - name: Copy files to server # 上传压缩包至服务器
       uses: appleboy/scp-action@v0.1.4
