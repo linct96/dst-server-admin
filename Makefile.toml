@@ -31,21 +31,26 @@ alias = "move_to_release_alias"
 script_runner = "bash"
 script = '''
 echo "Moving to release..."
-DEST_DIR="./release"
-rm -rf "$DEST_DIR"
-mkdir -p "$DEST_DIR"
+source_dir = "./target/release"
+target_dir="./release"  
 
-cp -r ./static/* "$DEST_DIR"
+rm -rf "$target_dir"
+mkdir -p "$target_dir"
+cp -r ./static/* "$target_dir"
+cp -r ./web/dist/* "$target_dir"
 
-# TARGET_RELEASE_FOLDER = "./target/release"
 
-for file in ./target/release/*; do
-    # 检查是否是文件且没有后缀或后缀为 .exe
-    if [[ -f "$file" && (! "$file" =~ \. || "$file" =~ \.exe$) ]]; then
-        echo "Moving $file to $DEST_DIR"
-        cp "$file" "$DEST_DIR/"
-    fi
-done
+# 使用 find 命令查找符合条件的文件并复制
+find "$source_dir" -type f \( -name "*.exe" -o -name "*.[!.]*" \) -exec cp {} "$target_dir" \;
+
+# for file in ./target/release/*; do
+#     # 检查是否是文件且没有后缀或后缀为 .exe
+#     if [[ -f "$file" && (! "$file" =~ \. || "$file" =~ \.exe$) ]]; then
+#         echo "Moving $file to $DEST_DIR"
+#         cp "$file" "$DEST_DIR/"
+#     fi
+# done
+
 '''
 
 [tasks.move_to_release_windows_alias]
