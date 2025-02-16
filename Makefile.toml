@@ -43,7 +43,8 @@ if (Test-Path -Path "$DEST_DIR") {
     Remove-Item -Path "$DEST_DIR" -Force -Recurse
 }
 New-Item -Path "$DEST_DIR" -ItemType Directory -Force
-Copy-Item -Path ".\static\*" -Destination "$DEST_DIR"
+Copy-Item -Path ".\static\" -Destination "$DEST_DIR" -Recurse
+Copy-Item -Path ".\web\dist\*" -Destination "$DEST_DIR" -Recurse
 '''
 # DEST_DIR="./release"
 # rm -rf "$DEST_DIR"

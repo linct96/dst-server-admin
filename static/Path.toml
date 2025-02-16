@@ -1,0 +1,5 @@
+steam_cmd = "/root/steam_cmd_download"
+dst_dedicated_server = "/root/dst_dedicated_server"
+dst_save = "/root/dst_save"
+dst_backup = "/root/dst_backup"
+dst_mod = "/root/dst_mod"
