@@ -31,12 +31,7 @@ jobs:
 
     - name: Create tar.gz
       run: |
-        mkdir -p ./server-auto-deploy-by-github
-        cp -r ./target/release/server ./server-auto-deploy-by-github
-        cp -r ./target/release/scripts ./server-auto-deploy-by-github
-        cp -r ./target/release/assets ./server-auto-deploy-by-github
-        cp -r ./target/release/index.html ./server-auto-deploy-by-github
-        tar -zcvf server-auto-deploy-by-github.tar.gz ./server-auto-deploy-by-github
+        tar -zcvf server-auto-deploy-by-github.tar.gz ./release
 
     - name: Copy files to server # 上传压缩包至服务器
       uses: appleboy/scp-action@v0.1.4

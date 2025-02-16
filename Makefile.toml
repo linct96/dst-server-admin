@@ -9,7 +9,7 @@ dependencies = ["member", "root"]
 run_task = { name = "member_flow", fork = true }
 
 [tasks.member_flow]
-dependencies = ["build"]
+dependencies = ["clean", "build"]
 
 [tasks.clean]
 command = "cargo"
@@ -43,9 +43,18 @@ if (Test-Path -Path "$DEST_DIR") {
     Remove-Item -Path "$DEST_DIR" -Force -Recurse
 }
 New-Item -Path "$DEST_DIR" -ItemType Directory -Force
-Copy-Item -Path ".\static\" -Destination "$DEST_DIR" -Recurse
+Copy-Item -Path ".\static\*" -Destination "$DEST_DIR" -Recurse
 Copy-Item -Path ".\web\dist\*" -Destination "$DEST_DIR" -Recurse
+
+$TARGET_RELEASE_FOLDER = ".\target\release"
+$EXECUTOR_FILES = Get-ChildItem -Path $TARGET_RELEASE_FOLDER -File | Where-Object {
+    $_.Extension -eq "" -or $_.Extension -eq ".exe"
+}
+foreach ($file in $EXECUTOR_FILES) {
+    Copy-Item -Path $file.FullName -Destination $DEST_DIR
+}
 '''
+
 # DEST_DIR="./release"
 # rm -rf "$DEST_DIR"
 # mkdir -p "$DEST_DIR"

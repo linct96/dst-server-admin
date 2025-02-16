@@ -13,7 +13,7 @@
     "postbuild": "echo 'postbuild'",
     "build:post": "npm run build:web && npm run build:server",
     "build": "npm run build:web && npm run build:server",
-    "build:server": "cargo build --release",
+    "build:server": "cargo make flow",
     "build:web": "pnpm --filter=web build",
     "build:tauri": "pnpm --filter=tauri build"
   },
