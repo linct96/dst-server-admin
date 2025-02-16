@@ -40,8 +40,8 @@ cp -r ./web/dist/* "$target_dir"
 
 
 # 使用 find 命令查找符合条件的文件并复制
-find "$source_dir" -type f \( -name "*.exe" -o -name "*.[!.]*" \) -exec cp {} "$target_dir" \;
-
+# find "$source_dir" -type f \( -name "*.exe" -o -name "*.[!.]*" \) -exec cp {} "$target_dir" \;
+find "$source_dir" -type f \( -name "*.exe" -o ! -name "*.*" \) -exec cp -v {} "$target_dir" \;
 # for file in ./target/release/*; do
 #     # 检查是否是文件且没有后缀或后缀为 .exe
 #     if [[ -f "$file" && (! "$file" =~ \. || "$file" =~ \.exe$) ]]; then
