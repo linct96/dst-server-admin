@@ -30,7 +30,6 @@ alias = "move_to_release_alias"
 [tasks.move_to_release_alias]
 script_runner = "bash"
 script = '''
-echo "Moving to release..."
 source_dir = "./target/release"
 target_dir="./release"  
 
@@ -57,7 +56,6 @@ find "$source_dir" -type f \( -name "*.exe" -o -name "*.[!.]*" \) -exec cp {} "$
 script_runner = "powershell"
 script_extension = "ps1"
 script = '''
-echo "Moving to move_to_release_windows_alias..."
 $DEST_DIR = ".\release"
 if (Test-Path -Path "$DEST_DIR") {
     Remove-Item -Path "$DEST_DIR" -Force -Recurse
