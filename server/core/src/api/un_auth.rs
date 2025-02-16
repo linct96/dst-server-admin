@@ -1,4 +1,4 @@
-use crate::api::{user,res::ResBody};
+use crate::api::{res::ResBody, user};
 use axum::routing::get;
 use axum::Router;
 

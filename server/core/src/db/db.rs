@@ -21,5 +21,3 @@ impl DB {
         Ok(Self { pool, conn })
     }
 }
-
-

@@ -32,7 +32,9 @@ pub struct GameInfo {
 }
 pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
     let mut game_info = GameInfo::default();
-    let path_dst_server = PATH_SETTINGS.get(EnumPathSettingKey::DstDedicatedServer.as_str()).unwrap();
+    let path_dst_server = PATH_SETTINGS
+        .get(EnumPathSettingKey::DstDedicatedServer.as_str())
+        .unwrap();
     game_info.path = path_dst_server.to_string();
     let dst_version_path = format!("{}/version.txt", &game_info.path);
     if Path::new(&game_info.path).exists() {
@@ -42,7 +44,6 @@ pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
 
     anyhow::Ok(game_info)
 }
-
 
 #[derive(Deserialize, Debug)]
 pub struct InstallDedicatedServerReq {
@@ -133,8 +134,8 @@ pub async fn service_update_dedicated_server() -> anyhow::Result<u32> {
         .get(EnumPathSettingKey::SteamCmd.as_str())
         .unwrap();
     let path_dst_server = PATH_SETTINGS
-    .get(EnumPathSettingKey::DstDedicatedServer.as_str())
-    .unwrap();
+        .get(EnumPathSettingKey::DstDedicatedServer.as_str())
+        .unwrap();
     let execute_command = match OS {
         "windows" => {
             let execute = Path::new(path_steam_cmd).join("steamcmd.exe");
@@ -169,7 +170,6 @@ pub async fn service_update_dedicated_server() -> anyhow::Result<u32> {
         .await?;
     anyhow::Ok(pid)
 }
-
 
 #[derive(Deserialize, Debug)]
 pub struct ConnectToConsoleReq {
@@ -381,7 +381,6 @@ async fn remove_dst_server() -> Result<bool> {
     Ok(true)
 }
 
-
 pub async fn service_update_dedicated_server_bak() -> anyhow::Result<bool> {
     let path_game = PATH_GAME.lock().await.clone();
     let execute_command = match OS {
@@ -409,7 +408,6 @@ pub async fn service_update_dedicated_server_bak() -> anyhow::Result<bool> {
     shell::execute_command(&execute_command).await?;
     anyhow::Ok(true)
 }
-
 
 pub async fn service_get_running_commands() -> anyhow::Result<Vec<u32>> {
     let pool = &*command_pool::COMMAND_POOL;

@@ -1,0 +1,60 @@
+[env]
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+
+[tasks.flow]
+workspace = false
+dependencies = ["member", "root"]
+
+[tasks.member]
+run_task = { name = "member_flow", fork = true }
+
+[tasks.member_flow]
+dependencies = ["build"]
+
+[tasks.clean]
+command = "cargo"
+args = ["clean"]
+
+[tasks.build]
+command = "cargo"
+args = ["build", "--release"]
+
+
+[tasks.root]
+dependencies = ["move_to_release"]
+
+[tasks.move_to_release]
+windows_alias = "move_to_release_windows_alias"
+alias = "move_to_release_alias"
+
+[tasks.move_to_release_alias]
+script_runner = "bash"
+script = '''
+echo "Moving to release..."
+pwd
+'''
+[tasks.move_to_release_windows_alias]
+script_runner = "powershell"
+script_extension = "ps1"
+script = '''
+echo "Moving to move_to_release_windows_alias..."
+$DEST_DIR = ".\release"
+if (Test-Path -Path "$DEST_DIR") {
+    Remove-Item -Path "$DEST_DIR" -Force -Recurse
+}
+New-Item -Path "$DEST_DIR" -ItemType Directory -Force
+Copy-Item -Path ".\static\*" -Destination "$DEST_DIR"
+'''
+# DEST_DIR="./release"
+# rm -rf "$DEST_DIR"
+# mkdir -p "$DEST_DIR"
+
+# cp "./static/*" "$DEST_DIR/"
+
+# for file in target/debug/*; do
+#     # 检查是否是文件且没有后缀或后缀为 .exe
+#     if [[ -f "$file" && (! "$file" =~ \. || "$file" =~ \.exe$) ]]; then
+#         echo "Moving $file to $DEST_DIR"
+#         cp "$file" "$DEST_DIR/"
+#     fi
+# done

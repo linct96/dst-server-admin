@@ -1,17 +1,18 @@
 mod api;
 mod bootstrap;
 mod config;
-mod db;
-mod service;
-mod utils;
 mod constant;
 mod context;
+mod db;
 mod routes;
+mod service;
+mod utils;
 use context::command_pool;
 use std::{
     env, fs,
     io::{self, Write},
-    path::{Path, PathBuf}, sync::Arc,
+    path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use api::res::{Res, ResBody};
@@ -20,7 +21,6 @@ use axum::{http::HeaderMap, routing::get, Json, Router};
 use asset::STATIC_DIR;
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
 use tempfile::{Builder, NamedTempFile};
-
 
 pub async fn t_login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> Res<AuthBody> {
     let res = login_service(login_req, header).await;
@@ -32,7 +32,6 @@ pub async fn t_login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> 
         Err(e) => Res::<AuthBody>::with_err(&e.to_string()),
     }
 }
-
 
 pub fn create_temp_file(content: &str) -> io::Result<PathBuf> {
     // 使用 Builder 模式创建持久化的临时文件
@@ -53,7 +52,7 @@ pub fn create_temp_file(content: &str) -> io::Result<PathBuf> {
 }
 
 #[tokio::main]
-async fn main()-> anyhow::Result<()> {
+async fn main() -> anyhow::Result<()> {
     // let temp_file_path = create_temp_file("Hello, Rust!").unwrap();
     // println!("Temp file path: {:?}", temp_file_path);
     // 读取文件内容
@@ -64,7 +63,7 @@ async fn main()-> anyhow::Result<()> {
 
     let settings = context::path_setting::PATH_SETTINGS.clone();
     println!("port: {:#?}", settings);
-    
+
     // let command = "echo Hello, World!";
     // let command_pool = crate::context::command_pool::COMMAND_POOL.lock().unwrap();
     // let command_id = command_pool.execute_command(command).await?;

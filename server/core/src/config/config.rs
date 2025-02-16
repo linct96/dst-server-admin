@@ -1,6 +1,5 @@
 use std::{env::consts::OS, path::PathBuf};
 
-
 pub struct Config {
     pub steam_cmd_path: &'static str,
     pub dst_server_path: &'static str,

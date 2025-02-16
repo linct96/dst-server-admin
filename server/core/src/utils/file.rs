@@ -73,7 +73,10 @@ pub async fn download_file(url: &str, save_path: &str) -> anyhow::Result<String>
     for attempt in 1..=max_retries {
         match client.get(url).send().await {
             Ok(response) => {
-                let content_disposition = response.headers().get(reqwest::header::CONTENT_DISPOSITION).cloned();
+                let content_disposition = response
+                    .headers()
+                    .get(reqwest::header::CONTENT_DISPOSITION)
+                    .cloned();
                 let filename = match content_disposition {
                     Some(value) => {
                         let value = value.to_str().unwrap().to_string();

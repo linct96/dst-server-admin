@@ -22,10 +22,7 @@ fn resolve_current_dir_path(path: &str) -> path::PathBuf {
     let resolved_path = if path.is_absolute() {
         path.to_path_buf()
     } else {
-        current_dir
-            .join(path)
-            .canonicalize()
-            .expect("路径序列化错误")
+        current_dir.join(path).canonicalize().expect("路径序列化错误")
     };
     resolved_path
 }
@@ -118,63 +115,63 @@ fn copy_recursive(src: &Path, dst: &Path) -> io::Result<()> {
 
 fn main() {
     // 读取环境变量
-    // let current_dir = std::env::current_dir().unwrap();
-    // let out_dir = env::var("OUT_DIR").unwrap();
-    // let assets_name = "assets";
-    // let source_assets_dir = current_dir.clone().join("assets"); // 源目录
-    // let target_assets_dir = Path::new(&out_dir)
-    //     .ancestors() // 向上遍历父目录
-    //     .nth(3) // 获取 target/debug 或 target/release 目录
-    //     .unwrap()
-    //     .join("scripts");
+    let current_dir = std::env::current_dir().unwrap();
+    let out_dir = env::var("OUT_DIR").unwrap();
+    let assets_name = "assets";
+    let source_assets_dir = current_dir.clone().join("assets"); // 源目录
+    let target_assets_dir = Path::new(&out_dir)
+        .ancestors() // 向上遍历父目录
+        .nth(3) // 获取 target/debug 或 target/release 目录
+        .unwrap()
+        .join("scripts");
 
-    // let source_static_dir = current_dir
-    //     .clone()
-    //     .ancestors()
-    //     .nth(2)
-    //     .unwrap()
-    //     .join("web/dist");
-    // let target_static_dir = Path::new(&out_dir)
-    //     .ancestors() // 向上遍历父目录
-    //     .nth(3) // 获取 target/debug 或 target/release 目录
-    //     .unwrap();
+    let source_static_dir = current_dir
+        .clone()
+        .ancestors()
+        .nth(2)
+        .unwrap()
+        .join("web/dist");
+    let target_static_dir = Path::new(&out_dir)
+        .ancestors() // 向上遍历父目录
+        .nth(3) // 获取 target/debug 或 target/release 目录
+        .unwrap();
 
-    // let assets_source_path = resolve_current_dir_path("script");
-    // println!("assets_source_path={}", assets_source_path.display());
-    // let assets_target_path = resolve_out_dir_path("script");
-    // println!("assets_target_path={}", assets_target_path.display());
-    // copy_recursive(&assets_source_path, &assets_target_path).expect("Failed to copy assets");
-    // let static_source_path = resolve_current_dir_path("../../web/dist");
-    // println!("static_source_path={}", static_source_path.display());
-    // let static_target_path = resolve_out_dir_path("");
-    // println!("static_target_path={}", static_target_path.display());
-    // copy_recursive(&static_source_path, &static_target_path).expect("Failed to copy assets");
+    let assets_source_path = resolve_current_dir_path("script");
+    println!("assets_source_path={}", assets_source_path.display());
+    let assets_target_path = resolve_out_dir_path("script");
+    println!("assets_target_path={}", assets_target_path.display());
+    copy_recursive(&assets_source_path, &assets_target_path).expect("Failed to copy assets");
+    let static_source_path = resolve_current_dir_path("../../web/dist");
+    println!("static_source_path={}", static_source_path.display());
+    let static_target_path = resolve_out_dir_path("");
+    println!("static_target_path={}", static_target_path.display());
+    copy_recursive(&static_source_path, &static_target_path).expect("Failed to copy assets");
 
-    // let config_source_path = resolve_current_dir_path("Config.toml");
-    // let config_target_path = resolve_out_dir_path("");
-    // copy_recursive(&config_source_path, &config_target_path).expect("Failed to copy assets");
+    let config_source_path = resolve_current_dir_path("Config.toml");
+    let config_target_path = resolve_out_dir_path("");
+    copy_recursive(&config_source_path, &config_target_path).expect("Failed to copy assets");
 
-    // copy_recursive(
-    //     &resolve_current_dir_path("Path.toml"),
-    //     &resolve_out_dir_path(""),
-    // )
-    // .expect("Failed to copy Path.toml");
+    copy_recursive(
+        &resolve_current_dir_path("Path.toml"),
+        &resolve_out_dir_path(""),
+    )
+    .expect("Failed to copy Path.toml");
 
-    // copy_recursive(
-    //     &resolve_current_dir_path("PathWindows.toml"),
-    //     &resolve_out_dir_path(""),
-    // )
-    // .expect("Failed to copy PathWindows.toml");
+    copy_recursive(
+        &resolve_current_dir_path("PathWindows.toml"),
+        &resolve_out_dir_path(""),
+    )
+    .expect("Failed to copy PathWindows.toml");
 
-    // let executor_name = match env::consts::OS {
-    //     "windows" => "./server.exe",
-    //     _ => "./server",
-    // };
-    // let p = resolve_out_dir_path(executor_name);
-    // println!("executor_name={}", p.display());
-    // copy_recursive(
-    //     &resolve_out_dir_path(executor_name),
-    //     &resolve_out_dir_path("dist"),
-    // )
-    // .expect("Failed to copy server");
+    let executor_name = match env::consts::OS {
+        "windows" => "./server.exe",
+        _ => "./server",
+    };
+    let p = resolve_out_dir_path(executor_name);
+    println!("executor_name={}", p.display());
+    copy_recursive(
+        &resolve_out_dir_path(executor_name),
+        &resolve_out_dir_path("dist"),
+    )
+    .expect("Failed to copy server");
 }

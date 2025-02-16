@@ -1,3 +1,5 @@
+use crate::{config::config::PathConfig, service::task::SYSTEM_INFO};
+use crate::{service::task::ConstantOS, utils::file};
 use colored::Colorize;
 use regex::Regex;
 use std::{
@@ -10,8 +12,6 @@ use std::{
     thread,
 };
 use tokio::process::Command as TokioCommand;
-use crate::{config::config::PathConfig, service::task::SYSTEM_INFO};
-use crate::{service::task::ConstantOS, utils::file};
 
 pub async fn execute_script(script_path: &str) -> anyhow::Result<Option<u32>> {
     // 创建一个 Command 对象，指定要执行的 shell 命令

@@ -20,7 +20,6 @@ pub fn api_router() -> Router {
         )
 }
 
-
 fn auth_router() -> Router {
     Router::new()
         .nest("/system", system::router_system())
@@ -34,4 +33,3 @@ fn un_auth_router() -> Router {
         // 无需授权Api.通用模块
         .nest("/login", un_auth::router_un_auth())
 }
-

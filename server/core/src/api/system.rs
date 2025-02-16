@@ -22,13 +22,11 @@ pub fn router_system() -> Router {
         .route("/get_running_commands", get(get_running_commands)) // 启动游戏服务器
 }
 
-
 pub async fn get_running_commands() -> ResBody<HashMap<String, u32>> {
     let command_pool = &*COMMAND_POOL;
     let commands = command_pool.get_running_commands().await;
-    
+
     ResBody::success(commands)
-    
 }
 
 pub async fn test_fn() -> ResBody<bool> {

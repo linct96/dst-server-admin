@@ -1,10 +1,7 @@
-mod user;
-mod system;
-mod un_auth;
+pub mod game;
+pub mod res;
 pub mod route;
 pub mod router;
-pub mod res;
-pub mod game;
-
-
-
+mod system;
+mod un_auth;
+mod user;

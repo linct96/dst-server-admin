@@ -5,7 +5,11 @@ use rusqlite::{config, Connection, Result};
 use tokio::time::{interval, Duration};
 
 use crate::{
-    api, db::db::DB, routes, service::task::SYSTEM_INFO, utils::file::{self, create_dir}
+    api,
+    db::db::DB,
+    routes,
+    service::task::SYSTEM_INFO,
+    utils::file::{self, create_dir},
 };
 
 fn init_database() -> Result<()> {
@@ -31,7 +35,7 @@ fn init_config() {
     }
 }
 
-async fn init_server()-> Result<(), io::Error> {
+async fn init_server() -> Result<(), io::Error> {
     let port = "9527";
     let router = api::route::root();
     let app_router = routes::app::app_router()?;
