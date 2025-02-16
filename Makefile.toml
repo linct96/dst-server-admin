@@ -35,7 +35,7 @@ DEST_DIR="./release"
 rm -rf "$DEST_DIR"
 mkdir -p "$DEST_DIR"
 
-cp "./static/*" "$DEST_DIR" -r
+cp -r ./static/* "$DEST_DIR"
 
 TARGET_RELEASE_FOLDER = "./target/release"
 for file in "$TARGET_RELEASE_FOLDER"; do
