@@ -38,7 +38,7 @@ mkdir -p "$DEST_DIR"
 cp -r ./static/* "$DEST_DIR"
 
 TARGET_RELEASE_FOLDER = "./target/release"
-for file in "$TARGET_RELEASE_FOLDER"; do
+for file in "$TARGET_RELEASE_FOLDER"/*; do
     # 检查是否是文件且没有后缀或后缀为 .exe
     if [[ -f "$file" && (! "$file" =~ \. || "$file" =~ \.exe$) ]]; then
         echo "Moving $file to $DEST_DIR"
