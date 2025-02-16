@@ -40,3 +40,4 @@ tar = "0.4.43"
 flate2 = "1.0.35"
 futures = "0.3.31"
 hyper = "1.6.0"
+config = { version = "0.15.8", features = ["json", "yaml", "toml"] }

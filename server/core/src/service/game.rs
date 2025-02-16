@@ -15,10 +15,161 @@ use tokio::{fs, join};
 use crate::{
     config::config::PathConfig,
     constant::{self, path::PATH_GAME},
-    context::command_pool::{self, EnumCommand, COMMAND_POOL},
+    context::{
+        command_pool::{self, EnumCommand, COMMAND_POOL},
+        path_setting::{self, EnumPathSettingKey, PATH_SETTINGS},
+    },
     service::task::{ConstantOS, SYSTEM_INFO},
-    utils::{file, shell},
+    utils::{file, path::resolve_current_exe_path, shell},
 };
+
+#[derive(Debug, Serialize, Clone, Default)]
+pub struct GameInfo {
+    pub path: String,
+    pub version: String,
+    pub server_installed: bool,
+    pub steam_cmd_installed: bool,
+}
+pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
+    let mut game_info = GameInfo::default();
+    let path_dst_server = PATH_SETTINGS.get(EnumPathSettingKey::DstDedicatedServer.as_str()).unwrap();
+    game_info.path = path_dst_server.to_string();
+    let dst_version_path = format!("{}/version.txt", &game_info.path);
+    if Path::new(&game_info.path).exists() {
+        let dst_version = fs::read_to_string(dst_version_path).await?;
+        game_info.version = dst_version.replace("\n", "").replace("\r", "");
+    }
+
+    anyhow::Ok(game_info)
+}
+
+
+#[derive(Deserialize, Debug)]
+pub struct InstallDedicatedServerReq {
+    force: Option<bool>,
+}
+pub async fn service_install_dedicated_server(
+    req: InstallDedicatedServerReq,
+) -> anyhow::Result<u32> {
+    let force = req.force.unwrap_or(false);
+    if force {
+        let path_game = constant::path::PATH_GAME.lock().await.clone();
+
+        if Path::new(&path_game.steam_cmd_path).exists() {
+            fs::remove_dir_all(&path_game.steam_cmd_path).await?;
+        }
+        if Path::new(&path_game.dst_server_path).exists() {
+            fs::remove_dir_all(&path_game.dst_server_path).await?;
+        }
+    }
+    println!("service_install_dedicated_server:start");
+    service_install_steam_cmd().await?;
+    let pid = service_update_dedicated_server().await?;
+    anyhow::Ok(pid)
+}
+
+pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
+    let path_game = constant::path::PATH_GAME.lock().await.clone();
+    let download_file_path = Path::new("./download");
+    let download_file_path_str = download_file_path.to_str().unwrap();
+    let download_url = match env::consts::OS {
+        "windows" => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip",
+        "macos" => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
+        _ => "http://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
+    };
+    let path_steam_cmd = PATH_SETTINGS
+        .get(EnumPathSettingKey::SteamCmd.as_str())
+        .unwrap();
+    Path::new(path_steam_cmd);
+    // let executor_path_buf = match env::consts::OS {
+    //     "windows" => Path::new(&path_game.steam_cmd_path)
+    //         .to_path_buf()
+    //         .join("steamcmd.exe"),
+    //     _ => Path::new(&path_game.steam_cmd_path)
+    //         .to_path_buf()
+    //         .join("steamcmd.sh"),
+    // };
+
+    // if executor_path_buf.exists() {
+    //     println!("steamCMD 已安装");
+    //     return anyhow::Ok(true);
+    // }
+
+    let executor_path = match env::consts::OS {
+        "windows" => Path::new(path_steam_cmd).join("steamcmd.exe"),
+        _ => Path::new(path_steam_cmd).join("steamcmd.sh"),
+    };
+    if executor_path.exists() {
+        println!("steamCMD 已安装");
+        return anyhow::Ok(true);
+    }
+
+    println!("开始下载 steamCMD");
+    // let file_name = file::download_file(download_url, download_file_path_str).await?;
+    println!("steamCMD 下载完成");
+
+    let exe_path = env::current_exe()?;
+    let script_path = resolve_current_exe_path("script");
+    let assets_file_path = match env::consts::OS {
+        "windows" => script_path.join("steamcmd.zip"),
+        "macos" => script_path.join("steamcmd_osx.tar.gz"),
+        _ => script_path.join("steamcmd_linux.tar.gz"),
+    };
+    println!(
+        "steamCMD 解压路径from: {}",
+        assets_file_path.to_str().unwrap()
+    );
+    println!("steamCMD 解压路径to: {}", &path_steam_cmd);
+    if assets_file_path.exists() {
+        file::unzip_file(&assets_file_path.to_str().unwrap(), &path_steam_cmd)?;
+    }
+
+    println!("steamCMD 解压完成");
+    anyhow::Ok(true)
+}
+
+pub async fn service_update_dedicated_server() -> anyhow::Result<u32> {
+    let path_steam_cmd = PATH_SETTINGS
+        .get(EnumPathSettingKey::SteamCmd.as_str())
+        .unwrap();
+    let path_dst_server = PATH_SETTINGS
+    .get(EnumPathSettingKey::DstDedicatedServer.as_str())
+    .unwrap();
+    let execute_command = match OS {
+        "windows" => {
+            let execute = Path::new(path_steam_cmd).join("steamcmd.exe");
+            let mut command = String::from("");
+            command += &format!(
+                "{} +force_install_dir {} +login anonymous +app_update 343050 validate +quit",
+                execute.to_str().unwrap(),
+                path_dst_server
+            );
+            command
+        }
+        _ => {
+            let execute = Path::new(path_steam_cmd).join("steamcmd.sh");
+            let mut command = String::from("");
+            command += &format!("cd {}", path_steam_cmd);
+            command += " && chmod +x steamcmd.sh";
+            command += &format!(
+                " && ./steamcmd.sh +force_install_dir {} +login anonymous +app_update 343050 validate +quit",
+                path_dst_server
+            );
+            command
+        }
+    };
+    let pool = &*command_pool::COMMAND_POOL;
+    let pid = pool
+        .execute_command(
+            command_pool::EnumCommand::UpdateDedicatedServer
+                .as_str()
+                .to_string(),
+            &execute_command,
+        )
+        .await?;
+    anyhow::Ok(pid)
+}
+
 
 #[derive(Deserialize, Debug)]
 pub struct ConnectToConsoleReq {
@@ -85,7 +236,12 @@ pub async fn service_start_dst_server(req: StartServerReq) -> anyhow::Result<u32
         }
     };
     let command_pool = &*command_pool::COMMAND_POOL;
-    let pid = command_pool.execute_command(EnumCommand::StartDedicatedServer.as_str().to_string(), &execute_command).await?;
+    let pid = command_pool
+        .execute_command(
+            EnumCommand::StartDedicatedServer.as_str().to_string(),
+            &execute_command,
+        )
+        .await?;
     anyhow::Ok(pid)
 }
 pub async fn service_stop_dst_server(req: StartServerReq) -> Result<bool> {
@@ -125,7 +281,6 @@ pub struct DstSaveWorldInfo {
 }
 pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
     let path_game = constant::path::PATH_GAME.lock().await.clone();
-    println!("path_game: {}", &path_game.dst_save_path);
     let saves = file::list_dir_with_target_file(&path_game.dst_save_path, "cluster.ini")
         .unwrap_or_else(|_| vec![]);
     let result: Vec<DstSaveInfo> = saves
@@ -226,115 +381,6 @@ async fn remove_dst_server() -> Result<bool> {
     Ok(true)
 }
 
-pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
-    let path_game = constant::path::PATH_GAME.lock().await.clone();
-    let download_file_path = Path::new("./download");
-    let download_file_path_str = download_file_path.to_str().unwrap();
-    let download_url = match env::consts::OS {
-        "windows" => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip",
-        "macos" => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
-        _ => "http://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
-    };
-
-    let executor_path_buf = match env::consts::OS {
-        "windows" => Path::new(&path_game.steam_cmd_path)
-            .to_path_buf()
-            .join("steamcmd.exe"),
-        _ => Path::new(&path_game.steam_cmd_path)
-            .to_path_buf()
-            .join("steamcmd.sh"),
-    };
-
-    if executor_path_buf.exists() {
-        println!("steamCMD 已安装");
-        return anyhow::Ok(true);
-    }
-
-    println!("开始下载 steamCMD");
-    // let file_name = file::download_file(download_url, download_file_path_str).await?;
-    println!("steamCMD 下载完成");
-
-    let exe_path = env::current_exe()?;
-    let assets_file_path = match env::consts::OS {
-        "windows" => exe_path.parent().unwrap().join("assets/steamcmd.zip"),
-        "macos" => exe_path.parent().unwrap().join("assets/steamcmd_osx.tar.gz"),
-        _ => exe_path.parent().unwrap().join("assets/steamcmd_linux.tar.gz"),
-    };
-    println!("steamCMD 解压路径from: {}", assets_file_path.to_str().unwrap());
-    println!("steamCMD 解压路径to: {}", &path_game.steam_cmd_path);
-    if assets_file_path.exists() {
-        file::unzip_file(
-            &assets_file_path.to_str().unwrap(),
-            &path_game.steam_cmd_path,
-        )?;
-    }
-    // file::unzip_file(
-    //     &format!("{}/{}", download_file_path_str, file_name),
-    //     &path_game.steam_cmd_path,
-    // )?;
-    
-    println!("steamCMD 解压完成");
-    anyhow::Ok(true)
-}
-
-#[derive(Deserialize, Debug)]
-pub struct InstallDedicatedServerReq {
-    force: Option<bool>,
-}
-pub async fn service_install_dedicated_server(
-    req: InstallDedicatedServerReq,
-) -> anyhow::Result<u32> {
-    let force = req.force.unwrap_or(false);
-    if force {
-        let path_game = constant::path::PATH_GAME.lock().await.clone();
-
-        if Path::new(&path_game.steam_cmd_path).exists() {
-            fs::remove_dir_all(&path_game.steam_cmd_path).await?;
-        }
-        if Path::new(&path_game.dst_server_path).exists() {
-            fs::remove_dir_all(&path_game.dst_server_path).await?;
-        }
-    }
-    println!("service_install_dedicated_server:start");
-    service_install_steam_cmd().await?;
-    let pid = service_update_dedicated_server().await?;
-    anyhow::Ok(pid)
-}
-
-pub async fn service_update_dedicated_server() -> anyhow::Result<u32> {
-    let path_game = PATH_GAME.lock().await.clone();
-    let execute_command = match OS {
-        "windows" => {
-            let execute = PathBuf::from(path_game.steam_cmd_path.clone()).join("steamcmd.exe");
-            let execute_str = execute.to_str().unwrap();
-            let mut command = String::from("");
-            command += &format!(
-                "{} +login anonymous +app_update 343050 validate +quit",
-                execute_str
-            );
-            command
-        }
-        _ => {
-            let execute = PathBuf::from(path_game.steam_cmd_path.clone()).join("steamcmd.sh");
-            let execute_str = execute.to_str().unwrap();
-            let mut command = String::from("");
-            command += &format!("cd {}", path_game.steam_cmd_path);
-            command += " && chmod +x steamcmd.sh";
-            command += " && ./steamcmd.sh +login anonymous +app_update 343050 validate +quit";
-            command
-        }
-    };
-    let pool = &*command_pool::COMMAND_POOL;
-    let pid = pool
-        .execute_command(
-            command_pool::EnumCommand::UpdateDedicatedServer
-                .as_str()
-                .to_string(),
-            &execute_command,
-        )
-        .await?;
-    anyhow::Ok(pid)
-}
 
 pub async fn service_update_dedicated_server_bak() -> anyhow::Result<bool> {
     let path_game = PATH_GAME.lock().await.clone();
@@ -364,26 +410,6 @@ pub async fn service_update_dedicated_server_bak() -> anyhow::Result<bool> {
     anyhow::Ok(true)
 }
 
-#[derive(Debug, Serialize, Clone, Default)]
-pub struct GameInfo {
-    pub path: String,
-    pub version: String,
-    pub server_installed: bool,
-    pub steam_cmd_installed: bool,
-}
-pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
-    let mut game_info = GameInfo::default();
-    let path_game = constant::path::PATH_GAME.lock().await.clone();
-
-    game_info.path = path_game.dst_server_path;
-    let dst_version_path = format!("{}/version.txt", &game_info.path);
-    if Path::new(&game_info.path).exists() {
-        let dst_version = fs::read_to_string(dst_version_path).await?;
-        game_info.version = dst_version.replace("\n", "").replace("\r", "");
-    }
-
-    anyhow::Ok(game_info)
-}
 
 pub async fn service_get_running_commands() -> anyhow::Result<Vec<u32>> {
     let pool = &*command_pool::COMMAND_POOL;

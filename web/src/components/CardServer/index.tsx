@@ -62,11 +62,6 @@ export default function CardServer() {
               <a onClick={handleUpdateGame}>更新游戏</a>
             </Space>
           )
-        },
-        {
-          key: '2',
-          label: '模式',
-          children: '无尽模式'
         }
       ]}
       style={{ width: '320px' }}

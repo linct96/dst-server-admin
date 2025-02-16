@@ -61,6 +61,9 @@ async fn main()-> anyhow::Result<()> {
     // 打印文件内容
     // println!("File contents:\n{}", contents);
     println!("Hello, world12!");
+
+    let settings = context::path_setting::PATH_SETTINGS.clone();
+    println!("port: {:#?}", settings);
     
     // let command = "echo Hello, World!";
     // let command_pool = crate::context::command_pool::COMMAND_POOL.lock().unwrap();

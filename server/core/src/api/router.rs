@@ -8,7 +8,18 @@ pub fn api_router() -> Router {
     Router::new()
         .nest("/auth", auth_router())
         .nest("/unAuth", un_auth_router())
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .layer(
+                    CorsLayer::new()
+                        .allow_origin("*".parse::<http::HeaderValue>().unwrap())
+                        .allow_methods([http::Method::GET, http::Method::POST])
+                        .allow_headers([http::header::CONTENT_TYPE]),
+                ),
+        )
 }
+
 
 fn auth_router() -> Router {
     Router::new()

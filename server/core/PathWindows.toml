@@ -1,0 +1,5 @@
+steam_cmd = "F:\\dst\\steam_cmd"
+dst_dedicated_server = "F:\\dst\\dst_dedicated_server"
+dst_save = "F:\\dst\\dst_save"
+dst_backup = "F:\\dst\\dst_backup"
+dst_mod = "F:\\dst\\dst_mod"

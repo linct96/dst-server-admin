@@ -128,18 +128,38 @@ function Home() {
                 },
                 {
                   key: '2',
-                  label: '模式',
+                  label: '游戏模式',
                   children: '无尽模式'
                 },
                 {
                   key: '3',
                   label: '天数',
-                  children: '100天'
+                  children: '101天/白天'
                 },
                 {
                   key: '4',
-                  label: '人数',
+                  label: '季节',
+                  children: '早秋(0/20)'
+                },
+                {
+                  key: '5',
+                  label: '玩家数',
                   children: '2/9'
+                },
+                {
+                  key: '6',
+                  label: '游戏版本',
+                  children: '21345'
+                },
+                {
+                  key: '7',
+                  label: '房间密码',
+                  children: '21345'
+                },
+                {
+                  key: '8',
+                  label: '直连代码',
+                  children: 'c_connect("101.126.78.130",10999)'
                 }
               ]}
               style={{ width: '320px' }}
