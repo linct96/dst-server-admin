@@ -38,10 +38,30 @@ mkdir -p "$target_dir"
 cp -r ./static/* "$target_dir"
 cp -r ./web/dist/* "$target_dir"
 
+# 遍历源目录下的所有文件
+for file in "$source_dir"/*; do
+    # 检查是否是文件
+    if [ -f "$file" ]; then
+        # 获取文件名
+        filename=$(basename "$file")
+
+        # 检查文件是否以 .exe 结尾
+        if [[ "$filename" == *.exe ]]; then
+            echo "Copying $file to $target_dir"
+            cp "$file" "$target_dir"
+        else
+            # 检查文件是否没有后缀且是二进制文件
+            if [[ "$filename" != *.* ]] && file "$file" | grep -q "binary"; then
+                echo "Copying $file to $target_dir"
+                cp "$file" "$target_dir"
+            fi
+        fi
+    fi
+done
 
 # 使用 find 命令查找符合条件的文件并复制
+# find "$source_dir" -type f \( -name "*.exe" -o ! -name "*.*" \) -exec cp -v {} "$target_dir" \;
 # find "$source_dir" -type f \( -name "*.exe" -o -name "*.[!.]*" \) -exec cp {} "$target_dir" \;
-find "$source_dir" -type f \( -name "*.exe" -o ! -name "*.*" \) -exec cp -v {} "$target_dir" \;
 # for file in ./target/release/*; do
 #     # 检查是否是文件且没有后缀或后缀为 .exe
 #     if [[ -f "$file" && (! "$file" =~ \. || "$file" =~ \.exe$) ]]; then
