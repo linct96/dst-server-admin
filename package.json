@@ -14,7 +14,8 @@
     "build": "npm run build:web && npm run build:server",
     "build:server": "cargo make flow",
     "build:web": "pnpm --filter=web build",
-    "build:tauri": "pnpm --filter=tauri build"
+    "build:tauri": "pnpm --filter=tauri build",
+    "build:dev:server": "cargo make dev_flow"
   },
   "resolutions": {
     "@types/react": "18"

@@ -1,6 +1,6 @@
 use crate::{
     api::res::ResBody,
-    context::command_pool::{EnumCommand, COMMAND_POOL},
+    context::{self, command_pool::{EnumCommand, COMMAND_POOL}},
     service::game::{self, GameInfo},
     utils,
 };
@@ -30,12 +30,12 @@ use std::{
 
 pub fn router_game() -> Router {
     Router::new()
+        .route("/test_fn", get(test_fn))
         .route("/get_game_info", get(get_game_info))
         .route("/get_all_saves", get(get_all_saves))
         .route("/install_dedicated_server", post(install_dedicated_server))
         .route("/update_dedicated_server", post(update_dedicated_server))
         .route("/get_running_commands", post(get_running_commands))
-        .route("/test_fn", get(sse_handler))
         .route("/install_steam_cmd", post(install_steam_cmd))
         .route("/start_dst_server", post(start_dst_server))
         .route("/stop_dst_server", post(stop_dst_server))
@@ -43,25 +43,12 @@ pub fn router_game() -> Router {
         .route("/sse_handler", get(sse_handler))
     // 登录
 }
-pub async fn test_fn() -> ResBody<String> {
+pub async fn test_fn() -> ResBody<bool> {
     // let file = STATIC_DIR.get_file("install_cmd.sh");
     // let script_content = fs::read_to_string(file).expect("Failed to read script file");
-    let exe_path = env::current_exe().unwrap();
-    let debug_dir = exe_path.parent().expect("无法获取可执行文件目录");
-    let script_path = debug_dir.join("assets/t.bat");
-
-    let mut file = File::open(script_path).expect("无法打开脚本文件");
-    let mut script_content = String::new();
-    file.read_to_string(&mut script_content)
-        .expect("无法读取脚本文件");
-    println!("BAT 文件内容:\n{}", script_content);
-
-    let result = utils::shell::execute_command(&script_content).await;
-
-    match result {
-        Ok(_) => ResBody::success(script_content),
-        Err(e) => ResBody::err(script_content, e.to_string()),
-    }
+    let ov = context::static_config::get();
+    println!("static_config: {:#?}", ov);
+    ResBody::success(true)
 }
 
 async fn sse_handler() -> Sse<impl Stream<Item = Result<Event, std::io::Error>>> {

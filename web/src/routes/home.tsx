@@ -100,6 +100,7 @@ function Home() {
 
   return (
     <div className="p-2">
+      <Button type="primary" onClick={handleTest}>test</Button>
       <CardSystem />
       <Flex gap="large" style={{ marginTop: '16px' }}>
         <div style={{ flex: 1 }}>

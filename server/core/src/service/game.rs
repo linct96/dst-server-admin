@@ -1,25 +1,21 @@
 use std::{
     env::{self, consts::OS},
-    io::Write,
     path::{Path, PathBuf},
 };
 
 use anyhow::{Ok, Result};
-use asset::STATIC_DIR;
 
 use ini::Ini;
 use serde::{Deserialize, Serialize};
-use tempfile::NamedTempFile;
-use tokio::{fs, join};
+use tokio::fs;
 
 use crate::{
-    config::config::PathConfig,
     constant::{self, path::PATH_GAME},
     context::{
+        self,
         command_pool::{self, EnumCommand, COMMAND_POOL},
-        path_setting::{self, EnumPathSettingKey, PATH_SETTINGS},
+        static_config::EnumStaticConfigKey,
     },
-    service::task::{ConstantOS, SYSTEM_INFO},
     utils::{file, path::resolve_current_exe_path, shell},
 };
 
@@ -32,8 +28,10 @@ pub struct GameInfo {
 }
 pub async fn service_get_game_info() -> anyhow::Result<GameInfo> {
     let mut game_info = GameInfo::default();
-    let path_dst_server = PATH_SETTINGS
-        .get(EnumPathSettingKey::DstDedicatedServer.as_str())
+
+    let static_config = context::static_config::get();
+    let path_dst_server = static_config
+        .get(EnumStaticConfigKey::DstDedicatedServer.as_str())
         .unwrap();
     game_info.path = path_dst_server.to_string();
     let dst_version_path = format!("{}/version.txt", &game_info.path);
@@ -70,31 +68,10 @@ pub async fn service_install_dedicated_server(
 }
 
 pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
-    let path_game = constant::path::PATH_GAME.lock().await.clone();
-    let download_file_path = Path::new("./download");
-    let download_file_path_str = download_file_path.to_str().unwrap();
-    let download_url = match env::consts::OS {
-        "windows" => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip",
-        "macos" => "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz",
-        _ => "http://media.st.dl.bscstorage.net/client/installer/steamcmd_linux.tar.gz",
-    };
-    let path_steam_cmd = PATH_SETTINGS
-        .get(EnumPathSettingKey::SteamCmd.as_str())
+    let static_config = context::static_config::get();
+    let path_steam_cmd = static_config
+        .get(EnumStaticConfigKey::SteamCmd.as_str())
         .unwrap();
-    Path::new(path_steam_cmd);
-    // let executor_path_buf = match env::consts::OS {
-    //     "windows" => Path::new(&path_game.steam_cmd_path)
-    //         .to_path_buf()
-    //         .join("steamcmd.exe"),
-    //     _ => Path::new(&path_game.steam_cmd_path)
-    //         .to_path_buf()
-    //         .join("steamcmd.sh"),
-    // };
-
-    // if executor_path_buf.exists() {
-    //     println!("steamCMD 已安装");
-    //     return anyhow::Ok(true);
-    // }
 
     let executor_path = match env::consts::OS {
         "windows" => Path::new(path_steam_cmd).join("steamcmd.exe"),
@@ -104,58 +81,54 @@ pub async fn service_install_steam_cmd() -> anyhow::Result<bool> {
         println!("steamCMD 已安装");
         return anyhow::Ok(true);
     }
-
-    println!("开始下载 steamCMD");
-    // let file_name = file::download_file(download_url, download_file_path_str).await?;
-    println!("steamCMD 下载完成");
-
-    let exe_path = env::current_exe()?;
-    let script_path = resolve_current_exe_path("script");
+    let resource_path = resolve_current_exe_path("resources");
     let assets_file_path = match env::consts::OS {
-        "windows" => script_path.join("steamcmd.zip"),
-        "macos" => script_path.join("steamcmd_osx.tar.gz"),
-        _ => script_path.join("steamcmd_linux.tar.gz"),
+        "windows" => resource_path.join("steamcmd.zip"),
+        "macos" => resource_path.join("steamcmd_osx.tar.gz"),
+        _ => resource_path.join("steamcmd_linux.tar.gz"),
     };
-    println!(
-        "steamCMD 解压路径from: {}",
-        assets_file_path.to_str().unwrap()
-    );
-    println!("steamCMD 解压路径to: {}", &path_steam_cmd);
+
     if assets_file_path.exists() {
         file::unzip_file(&assets_file_path.to_str().unwrap(), &path_steam_cmd)?;
     }
 
-    println!("steamCMD 解压完成");
     anyhow::Ok(true)
 }
 
 pub async fn service_update_dedicated_server() -> anyhow::Result<u32> {
-    let path_steam_cmd = PATH_SETTINGS
-        .get(EnumPathSettingKey::SteamCmd.as_str())
+    let static_config = context::static_config::get();
+    let path_steam_cmd = static_config
+        .get(EnumStaticConfigKey::SteamCmd.as_str())
         .unwrap();
-    let path_dst_server = PATH_SETTINGS
-        .get(EnumPathSettingKey::DstDedicatedServer.as_str())
+    let path_dst_server = static_config
+        .get(EnumStaticConfigKey::DstDedicatedServer.as_str())
         .unwrap();
     let execute_command = match OS {
         "windows" => {
-            let execute = Path::new(path_steam_cmd).join("steamcmd.exe");
+            let executor = Path::new(path_steam_cmd).join("steamcmd.exe");
             let mut command = String::from("");
             command += &format!(
                 "{} +force_install_dir {} +login anonymous +app_update 343050 validate +quit",
-                execute.to_str().unwrap(),
+                executor.to_str().unwrap(),
                 path_dst_server
             );
             command
         }
         _ => {
-            let execute = Path::new(path_steam_cmd).join("steamcmd.sh");
+            let executor = Path::new(path_steam_cmd).join("steamcmd.sh");
             let mut command = String::from("");
-            command += &format!("cd {}", path_steam_cmd);
-            command += " && chmod +x steamcmd.sh";
+            command += &format!("chmod +x {}", executor.to_str().unwrap());
             command += &format!(
-                " && ./steamcmd.sh +force_install_dir {} +login anonymous +app_update 343050 validate +quit",
+                "&& {} +force_install_dir {} +login anonymous +app_update 343050 validate +quit",
+                executor.to_str().unwrap(),
                 path_dst_server
             );
+            // command += &format!("cd {}", path_steam_cmd);
+            // command += " && chmod +x steamcmd.sh";
+            // command += &format!(
+            //     " && ./steamcmd.sh +force_install_dir {} +login anonymous +app_update 343050 validate +quit",
+            //     path_dst_server
+            // );
             command
         }
     };

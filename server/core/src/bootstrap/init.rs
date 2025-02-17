@@ -5,11 +5,7 @@ use rusqlite::{config, Connection, Result};
 use tokio::time::{interval, Duration};
 
 use crate::{
-    api,
-    db::db::DB,
-    routes,
-    service::task::SYSTEM_INFO,
-    utils::file::{self, create_dir},
+    api, context, db::db::DB, routes, service::task::SYSTEM_INFO, utils::file::{self, create_dir}
 };
 
 fn init_database() -> Result<()> {
@@ -20,6 +16,11 @@ fn init_database() -> Result<()> {
 }
 
 fn init_config() {
+    tokio::spawn(async move {
+        context::static_config::watch();
+    });
+    let static_config = context::static_config::get();
+    println!("加载配置文件: {:#?}", static_config);
     let home_dir: Option<std::path::PathBuf> = dirs::home_dir();
     match home_dir {
         None => {
@@ -92,6 +93,7 @@ pub async fn entry() {
     tracing_subscriber::fmt::init();
     init_periodic_task().await;
     init_config();
+    
     init_database().expect("Failed to initialize database");
     init_server().await;
 
