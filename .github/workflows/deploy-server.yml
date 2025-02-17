@@ -34,7 +34,8 @@ jobs:
 
     - name: Create tar.gz
       run: |
-        tar -zcvf auto-deploy-server-by-github.tar.gz ./release
+        cp -r ./release ./auto-deploy-server-by-github
+        tar -zcvf auto-deploy-server-by-github.tar.gz ./auto-deploy-server-by-github
 
     - name: Clear server
       uses: appleboy/ssh-action@master
