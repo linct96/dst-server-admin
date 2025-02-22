@@ -11,7 +11,7 @@ pub async fn login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> Re
     // }
     let res = login_service(login_req, header).await;
     match res {
-        Ok(x) => Res::<AuthBody>::with_data(x),
-        Err(e) => Res::<AuthBody>::with_err(&e.to_string()),
+        Ok(x) => Res::<AuthBody>::success(x),
+        Err(e) => Res::<AuthBody>::error(e.to_string()),
     }
 }

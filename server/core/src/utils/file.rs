@@ -1,6 +1,8 @@
+use regex::Regex;
 use reqwest::header::CONTENT_DISPOSITION;
+use serde::Serialize;
 use std::env::consts::OS;
-use std::io::Write;
+use std::io::{BufRead, BufWriter, Write};
 use std::{fs, io, path};
 use tempfile::Builder;
 use tokio::time;
@@ -158,4 +160,89 @@ pub fn unzip_file(origin_path: &str, output_path: &str) -> anyhow::Result<()> {
         _ => unzip_zip(origin_path, output_path)?,
     }
     anyhow::Ok(())
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SetupMods {
+    pub mods_collection: Vec<u64>,
+    pub mods: Vec<u64>,
+}
+pub fn get_mod_setup(path: &str) -> io::Result<SetupMods> {
+    let file = fs::File::open(path)?;
+    let reader = io::BufReader::new(file);
+    let mod_regex = Regex::new(r#"^\s*ServerModSetup\("(\d+)"\)\s*$"#).unwrap();
+    let mod_collection_regex = Regex::new(r#"^\s*ServerModCollectionSetup\("(\d+)"\)\s*$"#).unwrap();
+    let mut mods: Vec<_> = Vec::new();
+    let mut mods_collection = Vec::new();
+
+    for line in reader.lines() {
+        let line = line?;
+        // 查找匹配的数字
+        if let Some(captures) = mod_regex.captures(&line) {
+            if let Some(number) = captures.get(1) {
+                if let Ok(num) = number.as_str().parse::<u64>() {
+                    mods.push(num);
+                }
+            }
+        }
+        if let Some(captures) = mod_collection_regex.captures(&line) {
+            if let Some(number) = captures.get(1) {
+                if let Ok(num) = number.as_str().parse::<u64>() {
+                    mods_collection.push(num);
+                }
+            }
+        }
+    }
+
+    Ok(SetupMods {
+        mods_collection,
+        mods,
+    })
+}
+
+pub fn add_mod_setup(path: &str, mods: Vec<u64>) -> io::Result<()> {
+    let current_mods = get_mod_setup(path)?;
+    let file = fs::OpenOptions::new().append(true).open(path)?;
+    let mut writer = io::BufWriter::new(file);
+
+    for id in mods {
+        if current_mods.mods.contains(&id) || current_mods.mods_collection.contains(&id) {
+            continue;
+        }
+        writer.write_all(format!("\nServerModSetup(\"{}\")", id).as_bytes())?;
+    }
+    writer.flush()?;
+    Ok(())
+}
+
+pub fn delete_mod_setup(path: &str, mods: Vec<u64>) -> io::Result<()> {
+    // 读取文件内容
+    let mut lines = io::BufReader::new(fs::File::open(path)?).lines();
+    let mut buffer = String::new();
+
+    // 处理每一行
+    while let Some(line) = lines.next() {
+        let line = line?;
+        let mut found = false;
+        for id in &mods {
+            if line.contains(&format!("ServerModSetup(\"{}\")", id)) {
+                found = true;
+                break;
+            }
+        }
+        if !found {
+            buffer.push_str(&line);
+            buffer.push('\n');
+        }
+    }
+
+    // 覆盖写入文件
+    let file = fs::OpenOptions::new()
+        .write(true)
+        .truncate(true) // 确保清空文件
+        .open(path)?;
+    let mut writer = BufWriter::new(file);
+    writer.write_all(buffer.as_bytes())?;
+    writer.flush()?;
+    Ok(())
 }

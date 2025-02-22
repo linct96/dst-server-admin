@@ -7,9 +7,7 @@ mod db;
 mod routes;
 mod service;
 mod utils;
-use context::command_pool;
 use std::{
-    env, fs,
     io::{self, Write},
     path::{Path, PathBuf},
     sync::Arc,
@@ -18,7 +16,6 @@ use std::{
 use api::res::{Res, ResBody};
 use axum::{http::HeaderMap, routing::get, Json, Router};
 
-use asset::STATIC_DIR;
 use service::s_user::{login_service, login_service2, AuthBody, UserLoginReq};
 use tempfile::{Builder, NamedTempFile};
 
@@ -27,9 +24,9 @@ pub async fn t_login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> 
     match res {
         Ok(x) => {
             print!("login success: {}", x.exp);
-            Res::<AuthBody>::with_data(x)
+            Res::<AuthBody>::success(x)
         }
-        Err(e) => Res::<AuthBody>::with_err(&e.to_string()),
+        Err(e) => Res::<AuthBody>::error(e.to_string()),
     }
 }
 

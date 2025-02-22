@@ -9,28 +9,27 @@ use serde::Serialize;
 
 #[derive(Serialize, Debug, Default)]
 pub struct Res<T> {
-    pub code: Option<i32>,
+    pub code: i32,
     pub data: Option<T>,
-    pub msg: Option<String>,
+    pub message: String,
 }
 impl<T: Serialize> Res<T> {
-    pub fn with_data(data: T) -> Self {
+    pub fn success(data: T) -> Self {
         Self {
-            code: Some(200),
+            code: 200,
             data: Some(data),
-            msg: Some("success".to_string()),
+            message: "success".to_string(),
         }
     }
-    pub fn with_err(err: &str) -> Self {
+    pub fn error(message: String) -> Self {
         Self {
-            code: Some(500),
+            code: 500,
             data: None,
-            msg: Some(err.to_string()),
+            message,
         }
     }
 }
 
-/// 填入到extensions中的数据
 #[derive(Debug, Clone)]
 pub struct ResJsonString(pub String);
 
@@ -42,11 +41,11 @@ where
         let data = Self {
             code: self.code,
             data: self.data,
-            msg: self.msg,
+            message: self.message,
         };
         let json_string = match serde_json::to_string(&data) {
             Ok(v) => {
-                print!("json_string: {}", v);
+                // print!("json_string: {}", v);
                 v
             }
             Err(e) => {
@@ -71,8 +70,8 @@ where
 #[derive(Serialize, Debug, Default)]
 pub struct ResBody<T> {
     pub code: i32,
-    pub data: Option<T>,
     pub message: String,
+    pub data: Option<T>,
 }
 
 impl<T: Serialize> ResBody<T> {

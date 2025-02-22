@@ -1,5 +1,7 @@
 use std::{
+    any,
     env::{self, consts::OS},
+    io,
     path::{Path, PathBuf},
 };
 
@@ -14,9 +16,13 @@ use crate::{
     context::{
         self,
         command_pool::{self, EnumCommand, COMMAND_POOL},
-        static_config::EnumStaticConfigKey,
+        static_config::{self, EnumStaticConfigKey},
     },
-    utils::{file, path::resolve_current_exe_path, shell},
+    utils::{
+        file::{self, add_mod_setup, delete_mod_setup, get_mod_setup, SetupMods},
+        path::resolve_current_exe_path,
+        shell,
+    },
 };
 
 #[derive(Debug, Serialize, Clone, Default)]
@@ -292,6 +298,45 @@ pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
         .collect();
 
     Ok(result)
+}
+
+
+pub async fn service_get_all_mods() -> anyhow::Result<SetupMods> {
+    let static_config = context::static_config::get();
+    let dst_server_path = static_config
+        .get(EnumStaticConfigKey::DstDedicatedServer.as_str())
+        .unwrap();
+    let mods_setup_path = Path::new(dst_server_path)
+        .join("mods")
+        .join("dedicated_server_mods_setup.lua");
+    let mods = get_mod_setup(mods_setup_path.to_str().unwrap())?;
+    anyhow::Ok(mods)
+}
+
+
+pub async fn service_add_mods(mods: Vec<u64>) -> anyhow::Result<()> {
+    let static_config = context::static_config::get();
+    let dst_server_path = static_config
+        .get(EnumStaticConfigKey::DstDedicatedServer.as_str())
+        .unwrap();
+    let mods_setup_path = Path::new(dst_server_path)
+        .join("mods")
+        .join("dedicated_server_mods_setup.lua");
+    add_mod_setup(mods_setup_path.to_str().unwrap(), mods)?;
+
+    anyhow::Ok(())
+}
+pub async fn service_delete_mods(mods: Vec<u64>) -> anyhow::Result<()> {
+    let static_config = context::static_config::get();
+    let dst_server_path = static_config
+        .get(EnumStaticConfigKey::DstDedicatedServer.as_str())
+        .unwrap();
+    let mods_setup_path = Path::new(dst_server_path)
+        .join("mods")
+        .join("dedicated_server_mods_setup.lua");
+    delete_mod_setup(mods_setup_path.to_str().unwrap(), mods)?;
+
+    anyhow::Ok(())
 }
 // async fn update_dst_server_windows() -> Result<bool> {
 //     let url = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";

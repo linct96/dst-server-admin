@@ -20,6 +20,7 @@ import { useEffect } from 'react'
 import CardSaves from '../components/CardSaves'
 import CardSystem from '../components/CardSystem'
 import { CardServer } from '../components'
+import CardMods from '../components/CardMods'
 
 type FieldType = {
   host?: string
@@ -169,6 +170,7 @@ function Home() {
         </div>
         <div style={{ flex: 2 }}>
           <CardSaves />
+          <CardMods />
           <Card
             bordered={false}
             title="服务器连接"
@@ -176,6 +178,7 @@ function Home() {
           >
             2332
           </Card>
+          
         </div>
       </Flex>
     </div>

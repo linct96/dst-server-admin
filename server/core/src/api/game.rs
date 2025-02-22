@@ -1,11 +1,15 @@
 use crate::{
     api::res::ResBody,
-    context::{self, command_pool::{EnumCommand, COMMAND_POOL}},
+    context::{
+        self,
+        command_pool::{EnumCommand, COMMAND_POOL},
+    },
     service::game::{self, GameInfo},
-    utils,
+    utils::{self, file::SetupMods},
 };
 use futures::stream::{self, Stream};
 
+use serde::{Deserialize, Serialize};
 use tokio_stream::StreamExt;
 
 use asset::STATIC_DIR;
@@ -28,11 +32,16 @@ use std::{
     string,
 };
 
+use super::res::Res;
+
 pub fn router_game() -> Router {
     Router::new()
         .route("/test_fn", get(test_fn))
         .route("/get_game_info", get(get_game_info))
         .route("/get_all_saves", get(get_all_saves))
+        .route("/get_all_mods", get(get_all_mods))
+        .route("/add_mods", post(add_mods))
+        .route("/delete_mods", post(delete_mods))
         .route("/install_dedicated_server", post(install_dedicated_server))
         .route("/update_dedicated_server", post(update_dedicated_server))
         .route("/get_running_commands", post(get_running_commands))
@@ -136,12 +145,68 @@ pub async fn update_dedicated_server() -> ResBody<u32> {
     }
 }
 
-pub async fn get_all_saves() -> ResBody<Vec<game::DstSaveInfo>> {
+pub async fn get_all_saves() -> Res<Vec<game::DstSaveInfo>> {
     let result = game::service_get_all_saves().await;
 
     match result {
-        Ok(data) => ResBody::success(data),
-        Err(e) => ResBody::err(vec![], e.to_string()),
+        Ok(data) => Res::success(data),
+        Err(e) => Res::error(e.to_string()),
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ResSetupMods {
+    mods_collection: Vec<String>,
+    mods: Vec<String>,
+}
+pub async fn get_all_mods() -> Res<ResSetupMods> {
+    let result = game::service_get_all_mods().await;
+    let result = result.map(|data| {
+        ResSetupMods {
+            mods_collection: data.mods_collection.iter().map(|m| m.to_string()).collect(),
+            mods: data.mods.iter().map(|m| m.to_string()).collect(),
+        }
+    });
+
+    match result {
+        Ok(data) => Res::success(data),
+        Err(e) => Res::error(e.to_string()),
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AddModsReq {
+    mods: Vec<String>,
+}
+pub async fn add_mods(_: HeaderMap, Json(req): Json<AddModsReq>) -> Res<bool> {
+    let mods = req
+        .mods
+        .into_iter()
+        .map(|s| s.parse::<u64>().unwrap())
+        .collect();
+    let result = game::service_add_mods(mods).await;
+
+    match result {
+        Ok(()) => Res::success(true),
+        Err(e) => Res::error(e.to_string()),
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct DeleteModsReq {
+    mods: Vec<String>,
+}
+pub async fn delete_mods(_: HeaderMap, Json(req): Json<AddModsReq>) -> Res<bool> {
+    let mods = req
+        .mods
+        .into_iter()
+        .map(|s| s.parse::<u64>().unwrap())
+        .collect();
+    let result = game::service_delete_mods(mods).await;
+
+    match result {
+        Ok(()) => Res::success(true),
+        Err(e) => Res::error(e.to_string()),
     }
 }
 
