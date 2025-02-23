@@ -1,4 +1,13 @@
-import { Badge, Button, Card, Input, InputNumber, Space, Table, TableColumnsType } from 'antd'
+import {
+  Badge,
+  Button,
+  Card,
+  Input,
+  InputNumber,
+  Space,
+  Table,
+  TableColumnsType
+} from 'antd'
 import { SERVER_URL } from '../../const'
 import { CardSavesWrap } from './index.style'
 import { useEffect, useState } from 'react'
@@ -21,7 +30,6 @@ type DataType = {
   worlds: ExpandedDataType[]
 }
 export default function CardMods() {
-
   const [modID, setModID] = useState('')
   const [dataSource, setDataSource] = useState<DataType[]>([])
   const init = async () => {
@@ -34,12 +42,14 @@ export default function CardMods() {
     })
     const data = await res.json()
     console.log('handleGetAllMods', data)
-    setDataSource(data.data.mods.map((item: any) => {
-      return {
-        key: item,
-        id: item,
-      }
-    }))
+    setDataSource(
+      data.data.mods.map((item: any) => {
+        return {
+          key: item,
+          id: item
+        }
+      })
+    )
   }
   const handleAddMods = async () => {
     const res = await fetch(`${SERVER_URL}/api/auth/game/add_mods`, {
@@ -53,7 +63,7 @@ export default function CardMods() {
     })
     const json = await res.json()
 
-    console.log("handleAddMods", json.data)
+    console.log('handleAddMods', json.data)
   }
   const handleDeleteMods = async () => {
     const res = await fetch(`${SERVER_URL}/api/auth/game/delete_mods`, {
@@ -67,7 +77,7 @@ export default function CardMods() {
     })
     const json = await res.json()
 
-    console.log("handleDeleteMods", json.data)
+    console.log('handleDeleteMods', json.data)
   }
   useEffect(() => {
     init()
@@ -88,12 +98,8 @@ export default function CardMods() {
         title: '操作',
         render: (_, childRecord) => (
           <Space>
-            <a>
-              启动
-            </a>
-            <a>
-              停止
-            </a>
+            <a>启动</a>
+            <a>停止</a>
             <a>删除</a>
           </Space>
         )
@@ -126,13 +132,25 @@ export default function CardMods() {
         title="模组信息"
         extra={
           <Space>
-            <InputNumber style={{ width: "200px" }} controls={false} value={modID} placeholder='mod_id' onChange={e => {
-              if (e) {
-                setModID(e)
-              }
-            }}></InputNumber>
+            <InputNumber
+              style={{ width: '200px' }}
+              controls={false}
+              value={modID}
+              placeholder="mod_id"
+              onChange={e => {
+                if (e) {
+                  setModID(e)
+                }
+              }}
+            />
             <Button onClick={handleAddMods}>插入</Button>
-            <Button color='danger' variant='outlined' onClick={handleDeleteMods}>删除</Button>
+            <Button
+              color="danger"
+              variant="outlined"
+              onClick={handleDeleteMods}
+            >
+              删除
+            </Button>
           </Space>
         }
       >

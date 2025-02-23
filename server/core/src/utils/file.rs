@@ -18,6 +18,31 @@ pub fn create_dir(path: &str) -> bool {
     }
 }
 
+pub fn copy_dir_all(src: &str, dst: &str) -> io::Result<()> {
+    // 确保目标目录存在，如果不存在则创建
+    fs::create_dir_all(&dst)?;
+    let dst_path = path::Path::new(dst);
+    // 遍历源目录中的所有条目
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let filetype = entry.file_type()?;
+        let entry_path = entry.path();
+        let full_dst_path = dst_path.join(entry.file_name());
+
+        if filetype.is_dir() {
+            // 如果是目录，递归复制
+            copy_dir_all(
+                entry_path.to_str().unwrap(),
+                full_dst_path.to_str().unwrap(),
+            )?;
+        } else {
+            // 如果是文件，直接复制
+            fs::copy(&entry_path, &full_dst_path)?;
+        }
+    }
+    Ok(())
+}
+
 pub fn list_dir(path: &str) -> Result<Vec<String>, io::Error> {
     let mut result = Vec::new();
     for entry in fs::read_dir(path)? {
@@ -171,7 +196,8 @@ pub fn get_mod_setup(path: &str) -> io::Result<SetupMods> {
     let file = fs::File::open(path)?;
     let reader = io::BufReader::new(file);
     let mod_regex = Regex::new(r#"^\s*ServerModSetup\("(\d+)"\)\s*$"#).unwrap();
-    let mod_collection_regex = Regex::new(r#"^\s*ServerModCollectionSetup\("(\d+)"\)\s*$"#).unwrap();
+    let mod_collection_regex =
+        Regex::new(r#"^\s*ServerModCollectionSetup\("(\d+)"\)\s*$"#).unwrap();
     let mut mods: Vec<_> = Vec::new();
     let mut mods_collection = Vec::new();
 

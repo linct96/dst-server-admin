@@ -4,7 +4,7 @@ use crate::{
         self,
         command_pool::{EnumCommand, COMMAND_POOL},
     },
-    service::game::{self, GameInfo},
+    service::game::{self, CreateSaveReq, GameInfo},
     utils::{self, file::SetupMods},
 };
 use futures::stream::{self, Stream};
@@ -42,6 +42,7 @@ pub fn router_game() -> Router {
         .route("/get_all_mods", get(get_all_mods))
         .route("/add_mods", post(add_mods))
         .route("/delete_mods", post(delete_mods))
+        .route("/edit_save", post(edit_save))
         .route("/install_dedicated_server", post(install_dedicated_server))
         .route("/update_dedicated_server", post(update_dedicated_server))
         .route("/get_running_commands", post(get_running_commands))
@@ -161,11 +162,9 @@ pub struct ResSetupMods {
 }
 pub async fn get_all_mods() -> Res<ResSetupMods> {
     let result = game::service_get_all_mods().await;
-    let result = result.map(|data| {
-        ResSetupMods {
-            mods_collection: data.mods_collection.iter().map(|m| m.to_string()).collect(),
-            mods: data.mods.iter().map(|m| m.to_string()).collect(),
-        }
+    let result = result.map(|data| ResSetupMods {
+        mods_collection: data.mods_collection.iter().map(|m| m.to_string()).collect(),
+        mods: data.mods.iter().map(|m| m.to_string()).collect(),
     });
 
     match result {
@@ -203,6 +202,15 @@ pub async fn delete_mods(_: HeaderMap, Json(req): Json<AddModsReq>) -> Res<bool>
         .map(|s| s.parse::<u64>().unwrap())
         .collect();
     let result = game::service_delete_mods(mods).await;
+
+    match result {
+        Ok(()) => Res::success(true),
+        Err(e) => Res::error(e.to_string()),
+    }
+}
+
+pub async fn edit_save(_: HeaderMap, Json(req): Json<CreateSaveReq>) -> Res<bool> {
+    let result = game::service_edit_save(req).await;
 
     match result {
         Ok(()) => Res::success(true),

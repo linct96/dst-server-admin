@@ -19,7 +19,7 @@ use crate::{
         static_config::{self, EnumStaticConfigKey},
     },
     utils::{
-        file::{self, add_mod_setup, delete_mod_setup, get_mod_setup, SetupMods},
+        file::{self, add_mod_setup, copy_dir_all, delete_mod_setup, get_mod_setup, SetupMods},
         path::resolve_current_exe_path,
         shell,
     },
@@ -150,6 +150,30 @@ pub async fn service_update_dedicated_server() -> anyhow::Result<u32> {
     anyhow::Ok(pid)
 }
 
+#[derive(Deserialize, Debug)]
+pub struct CreateSaveReq {
+    save_name: String,
+}
+pub async fn service_edit_save(req: CreateSaveReq) -> anyhow::Result<()> {
+    let template_path = resolve_current_exe_path("resources")
+        .join("templates")
+        .join("Cluster");
+    let static_config = context::static_config::get();
+    let path_dst_save = static_config
+        .get(EnumStaticConfigKey::DstSave.as_str())
+        .unwrap();
+    let save_name = req.save_name;
+    let target_save_path = Path::new(path_dst_save).join(save_name);
+
+    if target_save_path.exists() {
+        return Err(anyhow::anyhow!("save already exists"));
+    }
+    copy_dir_all(
+        template_path.to_str().unwrap(),
+        target_save_path.to_str().unwrap(),
+    )?;
+    anyhow::Ok(())
+}
 #[derive(Deserialize, Debug)]
 pub struct ConnectToConsoleReq {
     pid: u32,
@@ -300,7 +324,6 @@ pub async fn service_get_all_saves() -> Result<Vec<DstSaveInfo>> {
     Ok(result)
 }
 
-
 pub async fn service_get_all_mods() -> anyhow::Result<SetupMods> {
     let static_config = context::static_config::get();
     let dst_server_path = static_config
@@ -312,7 +335,6 @@ pub async fn service_get_all_mods() -> anyhow::Result<SetupMods> {
     let mods = get_mod_setup(mods_setup_path.to_str().unwrap())?;
     anyhow::Ok(mods)
 }
-
 
 pub async fn service_add_mods(mods: Vec<u64>) -> anyhow::Result<()> {
     let static_config = context::static_config::get();

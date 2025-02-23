@@ -49,9 +49,7 @@ function Home() {
   const init = async () => {
     // handleGetSystemInfo()
     // handleGetGameInfo()
-
   }
-
 
   const handleUpdateGame = async () => {
     const res = await fetch(
@@ -101,7 +99,9 @@ function Home() {
 
   return (
     <div className="p-2">
-      <Button type="primary" onClick={handleTest}>test</Button>
+      <Button type="primary" onClick={handleTest}>
+        test
+      </Button>
       <CardSystem />
       <Flex gap="large" style={{ marginTop: '16px' }}>
         <div style={{ flex: 1 }}>
@@ -178,7 +178,6 @@ function Home() {
           >
             2332
           </Card>
-          
         </div>
       </Flex>
     </div>

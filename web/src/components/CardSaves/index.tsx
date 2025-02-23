@@ -25,6 +25,19 @@ export default function CardSaves() {
   const init = async () => {
     await handleGetAllSaves()
   }
+  const handleCreateSaves = async () => {
+    const res = await fetch(`${SERVER_URL}/api/auth/game/edit_save`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        save_name: 'test'
+      })
+    })
+    const data = await res.json()
+    console.log('handleCreateSaves', data)
+  }
 
   const handleGetAllSaves = async () => {
     const res = await fetch(`${SERVER_URL}/api/auth/game/get_all_saves`, {
@@ -47,7 +60,7 @@ export default function CardSaves() {
     })
     const json = await res.json()
 
-    console.log("handleStartDstServer", json.data)
+    console.log('handleStartDstServer', json.data)
   }
   const handleStopDstServer = async (data: {
     cluster: string
@@ -134,7 +147,7 @@ export default function CardSaves() {
         title="存档信息"
         extra={
           <Space>
-            <Button>新建存档</Button>
+            <Button onClick={handleCreateSaves}>新建存档</Button>
             <Button onClick={handleGetAllSaves}>获取存档</Button>
           </Space>
         }
