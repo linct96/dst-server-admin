@@ -51,12 +51,21 @@ fn refresh_static_config() {
     *use_static_config().write().unwrap() = load_static_config();
 }
 
-fn get_path_config() -> String {
+fn get_path_config() -> Vec<String> {
     let setting_path = match env::consts::OS {
         "windows" => resolve_current_exe_path("PathWindows.toml"),
         _ => resolve_current_exe_path("Path.toml"),
     };
-    setting_path.to_str().unwrap().to_string()
+    let mut paths = Vec::new();
+    let setting_global = resolve_current_exe_path("Global.toml")
+        .to_str()
+        .unwrap()
+        .to_string();
+    let setting_path = setting_path.to_str().unwrap().to_string();
+
+    paths.push(setting_global);
+    paths.push(setting_path);
+    paths
 }
 
 pub fn watch() -> ! {
@@ -74,12 +83,17 @@ pub fn watch() -> ! {
     // Add a path to be watched. All files and directories at that path and
     // below will be monitored for changes.
     let setting_path = get_path_config();
-    watcher
-        .watch(
-            Path::new(setting_path.as_str()),
-            RecursiveMode::NonRecursive,
-        )
-        .unwrap();
+    for path in setting_path {
+        watcher
+            .watch(Path::new(path.as_str()), RecursiveMode::NonRecursive)
+            .unwrap();
+    }
+    // watcher
+    //     .watch(
+    //         Path::new(setting_path.as_str()),
+    //         RecursiveMode::NonRecursive,
+    //     )
+    //     .unwrap();
 
     // This is a simple loop, but you may want to use more complex logic here,
     // for example to handle I/O.
@@ -103,10 +117,12 @@ pub fn watch() -> ! {
 
 fn load_static_config() -> Config {
     let setting_path = get_path_config();
-    Config::builder()
-        .add_source(File::with_name(setting_path.as_str()))
-        .build()
-        .unwrap()
+
+    let mut config = Config::builder();
+    for p in setting_path {
+        config = config.add_source(File::with_name(p.as_str()));
+    }
+    config.build().unwrap()
 }
 
 pub fn get() -> HashMap<String, String> {
