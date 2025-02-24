@@ -87,11 +87,12 @@ function Home() {
     console.log(data)
   }
   const handleTest = async () => {
-    const res = await fetch(`${SERVER_URL}/api/auth/game/test_fn`, {
+    const res = await fetch(`${SERVER_URL}/api/auth/game/get_cur_save_info`, {
       method: 'GET'
       // body: JSON.stringify({})
     })
-    // const data = await res.json()
+    const data = await res.json()
+    console.log('handleTest', data)
   }
   useEffect(() => {
     init()

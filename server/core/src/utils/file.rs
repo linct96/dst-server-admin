@@ -1,3 +1,4 @@
+use ini::Ini;
 use regex::Regex;
 use reqwest::header::CONTENT_DISPOSITION;
 use serde::Serialize;
@@ -299,4 +300,65 @@ pub fn get_save_worlds(save_name: String) -> io::Result<Vec<String>> {
         }
     }
     Ok(result)
+}
+
+pub fn get_save_path(save_name: String) -> io::Result<String> {
+    let static_config = context::static_config::get();
+    let path_dst_save = static_config
+        .get(EnumStaticConfigKey::DstSave.as_str())
+        .unwrap();
+    let target_save_path = Path::new(path_dst_save).join(save_name);
+    if !target_save_path.exists() {
+        return Err(io::Error::new(io::ErrorKind::NotFound, "save not exists"));
+    }
+
+    Ok(target_save_path.to_str().unwrap().to_string())
+}
+
+#[derive(Debug, Serialize)]
+pub struct ClusterIni {
+    pub game_mode: String,
+    pub max_players: String,
+    pub pause_when_empty: String,
+    pub cluster_name: String,
+    pub cluster_description: String,
+    pub cluster_intention: String,
+    pub console_enabled: String,
+    // pub vote_enabled: String,
+    // pub console_enabled: String,
+    // pub max_snapshots: String,
+    // pub autosaver_enabled: String,
+    // pub cluster_description: String,
+}
+pub fn get_save_ini(save_name: String) -> anyhow::Result<ClusterIni> {
+    let save_path = get_save_path(save_name)?;
+    let ini_path = Path::new(&save_path).join("cluster.ini");
+
+    let ini_config = Ini::load_from_file(ini_path.to_str().unwrap())?;
+    let game_play_section = ini_config.section(Some("GAMEPLAY")).unwrap();
+    let game_mode: &str = game_play_section.get("game_mode").unwrap_or("");
+    let max_players = game_play_section.get("max_players").unwrap_or("");
+    let pause_when_empty = game_play_section.get("pause_when_empty").unwrap_or("");
+
+    let network_section = ini_config.section(Some("NETWORK")).unwrap();
+    let cluster_name = network_section.get("cluster_name").unwrap_or("");
+    let cluster_description = network_section.get("cluster_description").unwrap_or("");
+    let cluster_intention = network_section.get("cluster_intention").unwrap_or("");
+
+    let misc_section = ini_config.section(Some("MISC")).unwrap();
+    let console_enabled = misc_section.get("console_enabled").unwrap_or("");
+
+    let shard_section = ini_config.section(Some("SHARD")).unwrap();
+    let shard_enabled = shard_section.get("shard_enabled").unwrap_or("");
+
+    let cluster_ini = ClusterIni {
+        game_mode: game_mode.to_string(),
+        max_players: max_players.to_string(),
+        pause_when_empty: pause_when_empty.to_string(),
+        cluster_name: cluster_name.to_string(),
+        cluster_description: cluster_description.to_string(),
+        cluster_intention: cluster_intention.to_string(),
+        console_enabled: console_enabled.to_string(),
+    };
+    Ok(cluster_ini)
 }

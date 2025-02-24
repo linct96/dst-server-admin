@@ -20,8 +20,8 @@ use crate::{
     },
     utils::{
         file::{
-            self, add_mod_setup, copy_dir_all, delete_mod_setup, get_mod_setup, get_save_worlds,
-            SetupMods,
+            self, add_mod_setup, copy_dir_all, delete_mod_setup, get_mod_setup, get_save_ini,
+            get_save_worlds, ClusterIni, SetupMods,
         },
         path::resolve_current_exe_path,
         shell,
@@ -461,8 +461,21 @@ pub async fn service_get_running_commands() -> anyhow::Result<Vec<u32>> {
     anyhow::Ok(commands.values().cloned().collect())
 }
 
-pub fn service_get_save_info(save_name: String) -> anyhow::Result<bool> {
-    let r = get_save_worlds(save_name);
-
-    Ok(true)
+#[derive(Debug, Serialize)]
+pub struct SaveInfo {
+    pub cluster_ini: ClusterIni,
+    pub worlds: Vec<String>,
+    // pub vote_enabled: String,
+    // pub console_enabled: String,
+    // pub max_snapshots: String,
+    // pub autosaver_enabled: String,
+    // pub cluster_description: String,
+}
+pub fn service_get_save_info(save_name: String) -> anyhow::Result<SaveInfo> {
+    let worlds = get_save_worlds(save_name.clone())?;
+    let cluster_ini = get_save_ini(save_name.clone())?;
+    Ok(SaveInfo {
+        cluster_ini,
+        worlds,
+    })
 }

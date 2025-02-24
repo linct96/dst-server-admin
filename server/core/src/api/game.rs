@@ -5,7 +5,7 @@ use crate::{
         command_pool::{EnumCommand, COMMAND_POOL},
         static_config,
     },
-    service::game::{self, CreateSaveReq, GameInfo},
+    service::game::{self, service_get_save_info, CreateSaveReq, GameInfo, SaveInfo},
     utils::{self, file::SetupMods},
 };
 use futures::stream::{self, Stream};
@@ -38,6 +38,7 @@ use super::res::Res;
 pub fn router_game() -> Router {
     Router::new()
         .route("/test_fn", get(test_fn))
+        .route("/get_cur_save_info", get(get_cur_save_info))
         .route("/get_game_info", get(get_game_info))
         .route("/get_all_saves", get(get_all_saves))
         .route("/get_all_mods", get(get_all_mods))
@@ -243,8 +244,13 @@ pub async fn stop_dst_server(
     }
 }
 
-pub async fn get_current_running_save_info() -> ResBody<bool> {
+pub async fn get_cur_save_info() -> Res<SaveInfo> {
     let static_config = context::static_config::get();
-    let save_name = static_config.get("current_save");
-    ResBody::success(true)
+    let save_name = static_config.get("current_save").unwrap().to_string();
+
+    let result = game::service_get_save_info(save_name);
+    match result {
+        Ok(data) => Res::success(data),
+        Err(e) => Res::error(e.to_string()),
+    }
 }
