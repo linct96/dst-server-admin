@@ -19,7 +19,10 @@ use crate::{
         static_config::{self, EnumStaticConfigKey},
     },
     utils::{
-        file::{self, add_mod_setup, copy_dir_all, delete_mod_setup, get_mod_setup, SetupMods},
+        file::{
+            self, add_mod_setup, copy_dir_all, delete_mod_setup, get_mod_setup, get_save_worlds,
+            SetupMods,
+        },
         path::resolve_current_exe_path,
         shell,
     },
@@ -456,4 +459,10 @@ pub async fn service_get_running_commands() -> anyhow::Result<Vec<u32>> {
     let commands = pool.get_running_commands().await;
 
     anyhow::Ok(commands.values().cloned().collect())
+}
+
+pub fn service_get_save_info(save_name: String) -> anyhow::Result<bool> {
+    let r = get_save_worlds(save_name);
+
+    Ok(true)
 }

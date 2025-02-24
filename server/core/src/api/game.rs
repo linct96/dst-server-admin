@@ -3,6 +3,7 @@ use crate::{
     context::{
         self,
         command_pool::{EnumCommand, COMMAND_POOL},
+        static_config,
     },
     service::game::{self, CreateSaveReq, GameInfo},
     utils::{self, file::SetupMods},
@@ -240,4 +241,10 @@ pub async fn stop_dst_server(
         Ok(_) => ResBody::success(true),
         Err(e) => ResBody::err(false, e.to_string()),
     }
+}
+
+pub async fn get_current_running_save_info() -> ResBody<bool> {
+    let static_config = context::static_config::get();
+    let save_name = static_config.get("current_save");
+    ResBody::success(true)
 }

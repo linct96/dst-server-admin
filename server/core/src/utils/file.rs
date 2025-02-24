@@ -3,9 +3,13 @@ use reqwest::header::CONTENT_DISPOSITION;
 use serde::Serialize;
 use std::env::consts::OS;
 use std::io::{BufRead, BufWriter, Write};
+use std::path::Path;
 use std::{fs, io, path};
 use tempfile::Builder;
 use tokio::time;
+
+use crate::context::static_config::EnumStaticConfigKey;
+use crate::context::{self, static_config};
 
 pub fn is_dir(path: &str) -> bool {
     path::Path::new(path).is_dir()
@@ -271,4 +275,28 @@ pub fn delete_mod_setup(path: &str, mods: Vec<u64>) -> io::Result<()> {
     writer.write_all(buffer.as_bytes())?;
     writer.flush()?;
     Ok(())
+}
+
+pub fn get_save_worlds(save_name: String) -> io::Result<Vec<String>> {
+    let static_config = context::static_config::get();
+    let path_dst_save = static_config
+        .get(EnumStaticConfigKey::DstSave.as_str())
+        .unwrap();
+    let target_save_path = Path::new(path_dst_save).join(save_name);
+    if !target_save_path.exists() {
+        return Err(io::Error::new(io::ErrorKind::NotFound, "save not exists"));
+    }
+    let mut result = Vec::new();
+    for entry in fs::read_dir(target_save_path)? {
+        let entry = entry?;
+        let file_name = entry.file_name().to_str().unwrap().to_string();
+        if entry.path().is_dir() {
+            if entry.path().join("server.ini").exists() {
+                result.push(file_name);
+            }
+
+            continue;
+        }
+    }
+    Ok(result)
 }
